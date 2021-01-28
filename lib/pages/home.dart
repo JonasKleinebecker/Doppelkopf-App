@@ -9,7 +9,11 @@ class Home extends StatelessWidget {
               title: Text("Doppelkopf"),
               actions: <Widget>[
                 IconButton(icon: Icon(Icons.bar_chart), onPressed: () {}),
-                IconButton(icon: Icon(Icons.person), onPressed: () {}),
+                IconButton(
+                    icon: Icon(Icons.person),
+                    onPressed: () {
+                      Navigator.pushNamed(context, "/players");
+                    }),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(0, 0, 14, 0),
                   child:
