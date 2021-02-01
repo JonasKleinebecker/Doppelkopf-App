@@ -9,4 +9,17 @@ class Player {
     this.name = name;
     this.age = age;
   }
+
+  Player.fromJson(Map<String, dynamic> json)
+      : name = json["name"],
+        age = json["age"];
+
+  Map<String, dynamic> toJson() => {
+        "name": name,
+        "age": age,
+      };
+
+  String getName() {
+    return name;
+  }
 }

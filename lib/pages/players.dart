@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:doppelkopf/classes/player.dart';
 import 'package:flutter/material.dart';
 import 'package:doppelkopf/pages/home.dart';
 import 'package:doppelkopf/pages/startGame.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Players extends StatefulWidget {
   @override
@@ -14,6 +17,16 @@ class _PlayersState extends State<Players> {
   Future<Player> createAddPlayerDialog(BuildContext context) {
     TextEditingController nameController = TextEditingController();
     TextEditingController ageController = TextEditingController();
+
+    Future<Player> getPlayerFromSharedPreferences(String playerName) async {
+      final prefs = await SharedPreferences.getInstance();
+      return Player.fromJson(json.decode(prefs.getString(playerName)));
+    }
+
+    void savePlayerToSharedPreferences(Player player) async {
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString(player.getName(), json.encode(player.toJson()));
+    }
 
     return showDialog(
         context: context,
