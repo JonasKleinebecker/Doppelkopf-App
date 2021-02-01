@@ -11,21 +11,37 @@ class Players extends StatefulWidget {
 class _PlayersState extends State<Players> {
   List<Player> playerList = [];
 
-  Future<String> createAddPlayerDialog(BuildContext context) {
-    TextEditingController controller = TextEditingController();
+  Future<Player> createAddPlayerDialog(BuildContext context) {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController ageController = TextEditingController();
 
     return showDialog(
         context: context,
-        builder: (context) { 
+        builder: (context) {
           return AlertDialog(
-            title: Text("Enter the Players Name"),
-            content: TextField(
-              controller: controller,
+            title: Text("Enter the Players Details."),
+            content: Column(
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    hintText: "Name",
+                  ),
+                ),
+                TextField(
+                  controller: ageController,
+                  decoration: InputDecoration(
+                    hintText: "Age",
+                  ),
+                ),
+              ],
             ),
             actions: [
               ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).pop(controller.text.toString());
+                    Navigator.of(context).pop(Player(
+                        nameController.text.toString(),
+                        ageController.text.toString()));
                   },
                   child: Text("Submit"))
             ],
@@ -46,7 +62,7 @@ class _PlayersState extends State<Players> {
         onPressed: () {
           createAddPlayerDialog(context).then((onValue) {
             setState(() {
-              playerList.add(Player(onValue));
+              playerList.add(onValue);
             });
           });
         },
