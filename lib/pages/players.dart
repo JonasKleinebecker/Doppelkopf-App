@@ -16,9 +16,9 @@ class Players extends StatefulWidget {
 class _PlayersState extends State<Players> {
   List<Player> playerList;
 
-  Future <List<Player>> getPlayersFromSharedPreferences() async{
-    final prefs = SharedPreferences.getInstance();
-    String serializedPlayerList = prefs.getString("playerList"); //TODO Fix this
+  Future<List<Player>> getPlayersFromSharedPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    String serializedPlayerList = prefs.getString("playerList");
     if (serializedPlayerList != null) {
       List playerStrings = json.decode(serializedPlayerList);
       return playerStrings.map((player) => Player.fromJson(player)).toList();
@@ -27,9 +27,10 @@ class _PlayersState extends State<Players> {
 
   void savePlayersToSharedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    List<String dynamic> jsons = playerList.map((player) => player.toJson()).toList();
-    prefs.setString("playerList", json.encode(jsons));
-}
+    List<Map<String, dynamic>> playerStrings =
+        playerList.map((player) => player.toJson()).toList();
+    prefs.setString("playerList", json.encode(playerStrings));
+  }
 
   Future<Player> createAddPlayerDialog(BuildContext context) {
     TextEditingController nameController = TextEditingController();
@@ -69,20 +70,24 @@ class _PlayersState extends State<Players> {
         });
   }
 
-  void initState() {
-   
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Players"),
       ),
-      body: Column(
-        children: playerList.map((player) => Text(player.name)).toList(),
+      body: ListView.separated(
+        separatorBuilder: (context, index) => Divider(),
+        itemCount: playerList != null ? playerList.length : 0,
+        itemBuilder: (BuildContext context, int index) {
+          return ListTile(
+            leading: CircleAvatar(),
+            title: Text(playerList[index].name),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add_circle_outline_rounded),
         onPressed: () {
           createAddPlayerDialog(context).then((onValue) {
             setState(() {
