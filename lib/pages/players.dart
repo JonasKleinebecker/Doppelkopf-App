@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:doppelkopf/classes/player.dart';
+import 'package:doppelkopf/pages/playerDetail.dart';
 import 'package:flutter/material.dart';
 import 'package:doppelkopf/pages/home.dart';
 import 'package:doppelkopf/pages/startGame.dart';
@@ -88,12 +89,17 @@ class _PlayersState extends State<Players> {
         itemCount: playerList != null ? playerList.length : 0,
         itemBuilder: (BuildContext context, int index) {
           return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.blueGrey[800],
-              child: Text(playerList[index].name.substring(0,1)),
-            ),
-            title: Text(playerList[index].name),
-          );
+              leading: CircleAvatar(
+                backgroundColor: Colors.blueGrey[800],
+                child: Text(playerList[index].name.substring(0, 1)),
+              ),
+              title: Text(playerList[index].name),
+              onTap: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (BuildContext context) {
+                  return playerDetail(playerList[index]);
+                }));
+              });
         },
       ),
       floatingActionButton: FloatingActionButton(
