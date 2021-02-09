@@ -88,7 +88,10 @@ class _PlayersState extends State<Players> {
         itemCount: playerList != null ? playerList.length : 0,
         itemBuilder: (BuildContext context, int index) {
           return ListTile(
-            leading: CircleAvatar(),
+            leading: CircleAvatar(
+              backgroundColor: Colors.blueGrey[800],
+              child: Text(playerList[index].name.substring(0,1)),
+            ),
             title: Text(playerList[index].name),
           );
         },
