@@ -14,14 +14,16 @@ class Players extends StatefulWidget {
 }
 
 class _PlayersState extends State<Players> {
-  List<Player> playerList;
+  List<Player> playerList = [];
 
-  Future<List<Player>> getPlayersFromSharedPreferences() async {
+  void setPlayersFromSharedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     String serializedPlayerList = prefs.getString("playerList");
     if (serializedPlayerList != null) {
       List playerStrings = json.decode(serializedPlayerList);
-      return playerStrings.map((player) => Player.fromJson(player)).toList();
+      playerList =
+          playerStrings.map((player) => Player.fromJson(player)).toList();
+      setState(() {});
     }
   }
 
@@ -68,6 +70,11 @@ class _PlayersState extends State<Players> {
             ],
           );
         });
+  }
+
+  void initState() {
+    super.initState();
+    setPlayersFromSharedPreferences();
   }
 
   @override
