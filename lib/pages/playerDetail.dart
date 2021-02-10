@@ -43,7 +43,12 @@ class _playerDetailState extends State<playerDetail> {
                         nameController.text.toString(),
                         ageController.text.toString()));
                   },
-                  child: Text("Submit"))
+                  child: Text("Submit")),
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(null);
+                  },
+                  child: Text("Cancel"))
             ],
           );
         });
@@ -63,16 +68,23 @@ class _playerDetailState extends State<playerDetail> {
               ElevatedButton(
                   onPressed: () {
                     createEditPlayerDialog(context).then((onValue) {
-                      widget.player.name = onValue.name;
-                      widget.player.age = onValue.age;
+                      if (onValue != null) {
+                        widget.player.name = onValue.name;
+                        widget.player.age = onValue.age;
 
-                      setState(() {});
+                        setState(() {});
+                      }
                     });
                   },
                   child: Text("Edit")),
               ElevatedButton(
                   onPressed: () {
-                    createDeletePlayerConfirmationDialog();
+                    createDeletePlayerConfirmationDialog(context)
+                        .then((onValue) {
+                      if (onValue == true) {
+                        Navigator.pop(context);
+                      }
+                    });
                   },
                   child: Text("Delete"))
             ],
@@ -80,20 +92,28 @@ class _playerDetailState extends State<playerDetail> {
         ));
   }
 
-  createDeletePlayerConfirmationDialog() {
+  Future<bool> createDeletePlayerConfirmationDialog(BuildContext context) {
     return showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
             title: Text("Enter the Players Details."),
-            content: Text("Do you want to delete Player ${widget.player.name}"),
+            content:
+                Text("Do you want to delete Player ${widget.player.name}?"),
             actions: [
               ElevatedButton(
                   onPressed: () {
                     PlayerHandler.deletePlayer(widget.player);
-                    Navigator.pop(context);
+                    Navigator.of(context)
+                        .pop(true); // return true if palyer was deleted
                   },
-                  child: Text("Yes"))
+                  child: Text("Yes")),
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pop(false); // return false if player wasnt deleted
+                  },
+                  child: Text("Nein"))
             ],
           );
         });
