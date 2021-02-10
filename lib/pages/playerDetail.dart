@@ -1,4 +1,5 @@
 import 'package:doppelkopf/classes/Player.dart';
+import 'package:doppelkopf/classes/PlayerHandler.dart';
 import 'package:flutter/material.dart';
 
 class playerDetail extends StatefulWidget {
@@ -10,7 +11,6 @@ class playerDetail extends StatefulWidget {
 }
 
 class _playerDetailState extends State<playerDetail> {
-
   Future<Player> createEditPlayerDialog(BuildContext context) {
     TextEditingController nameController = TextEditingController();
     TextEditingController ageController = TextEditingController();
@@ -65,15 +65,37 @@ class _playerDetailState extends State<playerDetail> {
                     createEditPlayerDialog(context).then((onValue) {
                       widget.player.name = onValue.name;
                       widget.player.age = onValue.age;
-                      
-                      setState(() {
-                                              
-                                            });
+
+                      setState(() {});
                     });
                   },
-                  child: Text("Edit"))
+                  child: Text("Edit")),
+              ElevatedButton(
+                  onPressed: () {
+                    createDeletePlayerConfirmationDialog();
+                  },
+                  child: Text("Delete"))
             ],
           ),
         ));
+  }
+
+  createDeletePlayerConfirmationDialog() {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Enter the Players Details."),
+            content: Text("Do you want to delete Player ${widget.player.name}"),
+            actions: [
+              ElevatedButton(
+                  onPressed: () {
+                    PlayerHandler.deletePlayer(widget.player);
+                    Navigator.pop(context);
+                  },
+                  child: Text("Yes"))
+            ],
+          );
+        });
   }
 }
