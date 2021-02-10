@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:doppelkopf/classes/player.dart';
+import 'package:doppelkopf/classes/Player.dart';
+import 'package:doppelkopf/classes/PlayerHandler.dart';
 import 'package:doppelkopf/pages/playerDetail.dart';
 import 'package:flutter/material.dart';
 import 'package:doppelkopf/pages/home.dart';
@@ -15,26 +16,6 @@ class Players extends StatefulWidget {
 }
 
 class _PlayersState extends State<Players> {
-  List<Player> playerList = [];
-
-  void setPlayersFromSharedPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    String serializedPlayerList = prefs.getString("playerList");
-    if (serializedPlayerList != null) {
-      List playerStrings = json.decode(serializedPlayerList);
-      playerList =
-          playerStrings.map((player) => Player.fromJson(player)).toList();
-      setState(() {});
-    }
-  }
-
-  void savePlayersToSharedPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    List<Map<String, dynamic>> playerStrings =
-        playerList.map((player) => player.toJson()).toList();
-    prefs.setString("playerList", json.encode(playerStrings));
-  }
-
   Future<Player> createAddPlayerDialog(BuildContext context) {
     TextEditingController nameController = TextEditingController();
     TextEditingController ageController = TextEditingController();
@@ -75,7 +56,7 @@ class _PlayersState extends State<Players> {
 
   void initState() {
     super.initState();
-    setPlayersFromSharedPreferences();
+    loadPlayerList();
   }
 
   @override
@@ -86,19 +67,23 @@ class _PlayersState extends State<Players> {
       ),
       body: ListView.separated(
         separatorBuilder: (context, index) => Divider(),
-        itemCount: playerList != null ? playerList.length : 0,
+        itemCount: PlayerHandler.getPlayerList != null
+            ? PlayerHandler.getPlayerList.length
+            : 0,
         itemBuilder: (BuildContext context, int index) {
           return ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.blueGrey[800],
-                child: Text(playerList[index].name.substring(0, 1)),
+                child: Text(
+                    PlayerHandler.getPlayerList[index].name.substring(0, 1)),
               ),
-              title: Text(playerList[index].name),
-              onTap: () {
-                Navigator.push(context,
+              title: Text(PlayerHandler.getPlayerList[index].name),
+              onTap: () async {
+                await Navigator.push(context,
                     MaterialPageRoute(builder: (BuildContext context) {
-                  return playerDetail(playerList[index]);
+                  return playerDetail(PlayerHandler.getPlayerList[index]);
                 }));
+                setState(() {}); //Reload if Back Button is pressed
               });
         },
       ),
@@ -107,12 +92,18 @@ class _PlayersState extends State<Players> {
         onPressed: () {
           createAddPlayerDialog(context).then((onValue) {
             setState(() {
-              playerList.add(onValue);
-              savePlayersToSharedPreferences();
+              PlayerHandler.getPlayerList.add(onValue);
+              PlayerHandler.savePlayersToSharedPreferences();
             });
           });
         },
       ),
     );
+  }
+
+  void loadPlayerList() async {
+    await PlayerHandler.setPlayersFromSharedPreferences(); //TODO: Refactor!
+    setState(() { //!hässlich
+        });
   }
 }
