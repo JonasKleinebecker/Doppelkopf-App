@@ -6,9 +6,8 @@ import 'package:doppelkopf/pages/playerDetail.dart';
 import 'package:flutter/material.dart';
 import 'package:doppelkopf/pages/home.dart';
 import 'package:doppelkopf/pages/startGame.dart';
-import 'package:gson/gson.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:type_token/type_token.dart';
+
 
 class Players extends StatefulWidget {
   @override
