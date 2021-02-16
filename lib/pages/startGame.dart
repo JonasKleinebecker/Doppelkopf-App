@@ -3,7 +3,7 @@ import 'package:doppelkopf/classes/PlayerHandler.dart';
 import 'package:flutter/material.dart';
 
 class StartGame extends StatefulWidget {
-  List<Player> activePlayers;
+  List<Player> activePlayers = [];
 
   @override
   _StartGameState createState() => _StartGameState();
@@ -45,7 +45,8 @@ class _StartGameState extends State<StartGame> {
                     trailing: IconButton(
                         icon: Icon(Icons.delete),
                         onPressed: () {
-                          //TODO
+                          widget.activePlayers.removeAt(index);
+                          setState(() {});
                         }),
                   );
                 },
@@ -56,7 +57,12 @@ class _StartGameState extends State<StartGame> {
       ),
       floatingActionButton: ElevatedButton(
           onPressed: () {
-            createAddPlayersDialog();
+            createAddPlayersDialog(context).then((onValue) {
+              if (onValue != null) {
+                widget.activePlayers.add(onValue);
+                setState(() {});
+              }
+            });
           },
           child: Text("Add Players")),
     );
@@ -69,32 +75,36 @@ class _StartGameState extends State<StartGame> {
     });
   }
 
-  createAddPlayersDialog() {
+  Future<Player> createAddPlayersDialog(BuildContext context) {
+    List<Player> addeblePlayers =
+        []; // does not contain Players, who have already been added
+    addeblePlayers.addAll(PlayerHandler.getPlayerList);
+    addeblePlayers.removeWhere((player) => widget.activePlayers.contains(
+        player)); //TODO: löscht die Einträge auch aus PlayerHandler.playerList !! Fix this!
     return showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
             title: Text("Choose Players"),
-            content:Container(
+            content: Container(
               width: 350,
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: PlayerHandler.getPlayerList != null
-                    ? PlayerHandler.getPlayerList.length
-                    : 0,
+                itemCount: addeblePlayers != null
+                    ? addeblePlayers.length : 0,
                 itemBuilder: (BuildContext context, int index) {
                   return ListTile(
-                  leading: CircleAvatar(
-                  backgroundColor: Colors.blueGrey[800],
-                  child: Text(PlayerHandler.getPlayerList[index].name
-                  .substring(0, 1)),
-                  ),
-                  title: Text(PlayerHandler.getPlayerList[index].name),
-                  trailing: IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: () {
-                  //TODO
-                  }),
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.blueGrey[800],
+                      child: Text(addeblePlayers[index].name.substring(0, 1)),
+                    ),
+                    title: Text(addeblePlayers[index].name), 
+                    trailing: IconButton(
+                        icon: Icon(Icons.add),
+                        onPressed: () {
+                          Navigator.of(context)
+                              .pop(addeblePlayers[index]);
+                        }),
                   );
                 },
               ),

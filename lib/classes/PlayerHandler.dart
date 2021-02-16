@@ -6,7 +6,7 @@ import 'Player.dart';
 class PlayerHandler {
   static List<Player> playerList = [];
 
-  static List get getPlayerList => playerList;
+  static List<Player> get getPlayerList => playerList;
 
   static set setPlayerList(List playerList) =>
       PlayerHandler.playerList = playerList;
@@ -16,7 +16,7 @@ class PlayerHandler {
     String serializedPlayerList = prefs.getString("playerList");
     if (serializedPlayerList != null) {
       List playerStrings = json.decode(serializedPlayerList);
-      playerList =
+      playerList =    
           playerStrings.map((player) => Player.fromJson(player)).toList();
     }
   }
