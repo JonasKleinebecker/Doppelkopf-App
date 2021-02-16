@@ -8,7 +8,6 @@ import 'package:doppelkopf/pages/home.dart';
 import 'package:doppelkopf/pages/startGame.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class Players extends StatefulWidget {
   @override
   _PlayersState createState() => _PlayersState();
@@ -41,6 +40,12 @@ class _PlayersState extends State<Players> {
               ],
             ),
             actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(null);
+                },
+                child: Text("Cancel"),
+              ),
               ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop(Player(
@@ -91,8 +96,10 @@ class _PlayersState extends State<Players> {
         onPressed: () {
           createAddPlayerDialog(context).then((onValue) {
             setState(() {
-              PlayerHandler.getPlayerList.add(onValue);
-              PlayerHandler.savePlayersToSharedPreferences();
+              if (onValue != null) {
+                PlayerHandler.getPlayerList.add(onValue);
+                PlayerHandler.savePlayersToSharedPreferences();
+              }
             });
           });
         },
@@ -102,7 +109,8 @@ class _PlayersState extends State<Players> {
 
   void loadPlayerList() async {
     await PlayerHandler.setPlayersFromSharedPreferences(); //TODO: Refactor!
-    setState(() { //!hässlich
-        });
+    setState(() {
+      //!hässlich
+    });
   }
 }
