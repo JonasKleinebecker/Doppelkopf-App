@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:doppelkopf/classes/Player.dart';
-import 'package:doppelkopf/classes/PlayerHandler.dart';
+import 'package:doppelkopf/classes/PlayerController.dart';
 import 'package:doppelkopf/pages/playerDetail.dart';
 import 'package:flutter/material.dart';
 import 'package:doppelkopf/pages/home.dart';
@@ -71,21 +71,21 @@ class _PlayersState extends State<Players> {
       ),
       body: ListView.separated(
         separatorBuilder: (context, index) => Divider(),
-        itemCount: PlayerHandler.getPlayerList != null
-            ? PlayerHandler.getPlayerList.length
+        itemCount: PlayerController.getPlayerList != null
+            ? PlayerController.getPlayerList.length
             : 0,
         itemBuilder: (BuildContext context, int index) {
           return ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.blueGrey[800],
                 child: Text(
-                    PlayerHandler.getPlayerList[index].name.substring(0, 1)),
+                    PlayerController.getPlayerList[index].name.substring(0, 1)),
               ),
-              title: Text(PlayerHandler.getPlayerList[index].name),
+              title: Text(PlayerController.getPlayerList[index].name),
               onTap: () async {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (BuildContext context) {
-                  return playerDetail(PlayerHandler.getPlayerList[index]);
+                  return playerDetail(PlayerController.getPlayerList[index]);
                 }));
                 setState(() {}); //Reload if Back Button is pressed
               });
@@ -97,8 +97,8 @@ class _PlayersState extends State<Players> {
           createAddPlayerDialog(context).then((onValue) {
             setState(() {
               if (onValue != null) {
-                PlayerHandler.getPlayerList.add(onValue);
-                PlayerHandler.savePlayersToSharedPreferences();
+                PlayerController.getPlayerList.add(onValue);
+                PlayerController.savePlayersToSharedPreferences();
               }
             });
           });
@@ -108,7 +108,7 @@ class _PlayersState extends State<Players> {
   }
 
   void loadPlayerList() async {
-    await PlayerHandler.setPlayersFromSharedPreferences(); //TODO: Refactor!
+    await PlayerController.setPlayersFromSharedPreferences(); //TODO: Refactor!
     setState(() {
       //!hässlich
     });

@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Player.dart';
 
-class PlayerHandler {
+class PlayerController {
   static List<Player> playerList = [];
 
   static List<Player> get getPlayerList => playerList;
 
   static set setPlayerList(List playerList) =>
-      PlayerHandler.playerList = playerList;
+      PlayerController.playerList = playerList;
 
   static Future<void> setPlayersFromSharedPreferences() async {
     final prefs = await SharedPreferences.getInstance();

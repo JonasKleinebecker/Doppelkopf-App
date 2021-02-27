@@ -1,5 +1,5 @@
 import 'package:doppelkopf/classes/Player.dart';
-import 'package:doppelkopf/classes/PlayerHandler.dart';
+import 'package:doppelkopf/classes/PlayerController.dart';
 import 'package:flutter/material.dart';
 
 class playerDetail extends StatefulWidget {
@@ -103,7 +103,7 @@ class _playerDetailState extends State<playerDetail> {
             actions: [
               ElevatedButton(
                   onPressed: () {
-                    PlayerHandler.deletePlayer(widget.player);
+                    PlayerController.deletePlayer(widget.player);
                     Navigator.of(context)
                         .pop(true); // return true if palyer was deleted
                   },

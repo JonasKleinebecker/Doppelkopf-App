@@ -1,5 +1,5 @@
 import 'package:doppelkopf/classes/Player.dart';
-import 'package:doppelkopf/classes/PlayerHandler.dart';
+import 'package:doppelkopf/classes/PlayerController.dart';
 import 'package:flutter/material.dart';
 
 class StartGame extends StatefulWidget {
@@ -55,21 +55,28 @@ class _StartGameState extends State<StartGame> {
           ],
         ),
       ),
-      floatingActionButton: ElevatedButton(
-          onPressed: () {
-            createAddPlayersDialog(context).then((onValue) {
-              if (onValue != null) {
-                widget.activePlayers.add(onValue);
-                setState(() {});
-              }
-            });
-          },
-          child: Text("Add Players")),
+      floatingActionButton: Row(
+        children: [
+          ElevatedButton(
+              onPressed: () {
+                createAddPlayersDialog(context).then((onValue) {
+                  if (onValue != null) {
+                    widget.activePlayers.add(onValue);
+                    setState(() {}); 
+                  }
+                });
+              },
+              child: Text("Add Players")),
+          ElevatedButton(
+              onPressed: (enoughPlayerAdded() ? ()=> startGame() : null),
+              child: Text("Start Game"))
+        ],
+      ),
     );
   }
 
   void loadPlayerList() async {
-    await PlayerHandler.setPlayersFromSharedPreferences(); //TODO: Refactor!
+    await PlayerController.setPlayersFromSharedPreferences(); //TODO: Refactor!
     setState(() {
       //!hässlich
     });
@@ -78,9 +85,9 @@ class _StartGameState extends State<StartGame> {
   Future<Player> createAddPlayersDialog(BuildContext context) {
     List<Player> addeblePlayers =
         []; // does not contain Players, who have already been added
-    addeblePlayers.addAll(PlayerHandler.getPlayerList);
-    addeblePlayers.removeWhere((player) => widget.activePlayers.contains(
-        player)); //TODO: löscht die Einträge auch aus PlayerHandler.playerList !! Fix this!
+    addeblePlayers.addAll(PlayerController.getPlayerList);
+    addeblePlayers
+        .removeWhere((player) => widget.activePlayers.contains(player));
     return showDialog(
         context: context,
         builder: (context) {
@@ -90,20 +97,18 @@ class _StartGameState extends State<StartGame> {
               width: 350,
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: addeblePlayers != null
-                    ? addeblePlayers.length : 0,
+                itemCount: addeblePlayers != null ? addeblePlayers.length : 0,
                 itemBuilder: (BuildContext context, int index) {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.blueGrey[800],
                       child: Text(addeblePlayers[index].name.substring(0, 1)),
                     ),
-                    title: Text(addeblePlayers[index].name), 
+                    title: Text(addeblePlayers[index].name),
                     trailing: IconButton(
                         icon: Icon(Icons.add),
                         onPressed: () {
-                          Navigator.of(context)
-                              .pop(addeblePlayers[index]);
+                          Navigator.of(context).pop(addeblePlayers[index]);
                         }),
                   );
                 },
@@ -118,5 +123,20 @@ class _StartGameState extends State<StartGame> {
             ],
           );
         });
+  }
+
+  bool enoughPlayerAdded() {
+    if (widget.activePlayers.length >= 4) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  void startGame() {
+    Navigator.of(context).popAndPushNamed(
+      "/gameOverview",
+      arguments: widget.activePlayers, 
+    );
   }
 }
