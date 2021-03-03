@@ -2,6 +2,8 @@ import 'package:doppelkopf/classes/Player.dart';
 import 'package:doppelkopf/classes/PlayerController.dart';
 import 'package:flutter/material.dart';
 
+import 'gameOverview.dart';
+
 class StartGame extends StatefulWidget {
   List<Player> activePlayers = [];
 
@@ -56,19 +58,20 @@ class _StartGameState extends State<StartGame> {
         ),
       ),
       floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           ElevatedButton(
               onPressed: () {
                 createAddPlayersDialog(context).then((onValue) {
                   if (onValue != null) {
                     widget.activePlayers.add(onValue);
-                    setState(() {}); 
+                    setState(() {});
                   }
                 });
               },
               child: Text("Add Players")),
           ElevatedButton(
-              onPressed: (enoughPlayerAdded() ? ()=> startGame() : null),
+              onPressed: (enoughPlayerAdded() ? () => startGame() : null),
               child: Text("Start Game"))
         ],
       ),
@@ -134,9 +137,7 @@ class _StartGameState extends State<StartGame> {
   }
 
   void startGame() {
-    Navigator.of(context).popAndPushNamed(
-      "/gameOverview",
-      arguments: widget.activePlayers, 
-    );
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => GameOverview(widget.activePlayers)));
   }
 }

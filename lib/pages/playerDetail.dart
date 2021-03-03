@@ -113,7 +113,7 @@ class _playerDetailState extends State<playerDetail> {
                     Navigator.of(context)
                         .pop(false); // return false if player wasnt deleted
                   },
-                  child: Text("Nein"))
+                  child: Text("No"))
             ],
           );
         });

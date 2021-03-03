@@ -85,7 +85,7 @@ class _PlayersState extends State<Players> {
               onTap: () async {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (BuildContext context) {
-                  return playerDetail(PlayerController.getPlayerList[index]);
+                  return playerDetail(PlayerController.getPlayerList[index]); //TODO: Refactor
                 }));
                 setState(() {}); //Reload if Back Button is pressed
               });

@@ -1,3 +1,4 @@
+import 'package:doppelkopf/pages/GameOverview.dart';
 import 'package:doppelkopf/pages/players.dart';
 import 'package:flutter/material.dart';
 import 'package:doppelkopf/pages/home.dart';
@@ -12,3 +13,4 @@ void main() => runApp(MaterialApp(
   },
   )
 );
+
