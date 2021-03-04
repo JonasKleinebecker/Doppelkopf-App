@@ -15,29 +15,40 @@ class Round {
   Solo soloPlayed;
   bool bockrunde;
 
-  int winningTeamPoints;
-  List<Announcement> announcementsWinningTeam;
-  List<Announcement> announcementsLoosingTeam;
+  int winningTeamPoints = 120;
+  int announcementsRe = 120;
+  int announcementsContra = 120;
+  int gesprochenRe = 0;
+  int gesprochenContra = 0;
 
-  List<ExtraPoint> extraPointsWinningTeam;
-  List<ExtraPoint> extraPointsLoosingTeam;
+  List<ExtraPoint> extraPointsRe;
+  List<ExtraPoint> extraPointsContra;
 
   int roundValue;
 
   int calculateRoundValue() {
     int roundValue = 0;
     int scoreToWin = 121;
+    int announcementsWinningTeam;
+    int announcementsLoosingTeam;
+    List<ExtraPoint> extraPointsWinningTeam;
+    List<ExtraPoint> extraPointsLoosingTeam;
 
-    //Startpunkt für die extraPunkte Berechnung durch Punkte bestimmen
-    if (extraPointsLoosingTeam.contains(Announcement.schwarz)) {
-      scoreToWin = 1;
-    } else if (extraPointsLoosingTeam.contains(Announcement.keine30)) {
-      scoreToWin = 30;
-    } else if (extraPointsLoosingTeam.contains(Announcement.keine60)) {
-      scoreToWin = 60;
-    } else if (extraPointsLoosingTeam.contains(Announcement.keine90)) {
-      scoreToWin = 90;
+    if (winningTeam == Team.re) {
+      announcementsWinningTeam = announcementsRe;
+      announcementsLoosingTeam = announcementsContra;
+
+      extraPointsWinningTeam = extraPointsRe;
+      extraPointsLoosingTeam = extraPointsContra;
+    } else {
+      announcementsWinningTeam = announcementsContra;
+      announcementsLoosingTeam = announcementsRe;
+
+      extraPointsWinningTeam = extraPointsContra;
+      extraPointsLoosingTeam = extraPointsRe;
     }
+    //Startpunkt für die extraPunkte Berechnung durch Punkte bestimmen
+    scoreToWin = announcementsWinningTeam + 1; //TODO: Berechnung
 
     if (soloPlayed == Solo.none) {
       if (winningTeam == Team.draw) {
@@ -51,8 +62,6 @@ class Round {
       extraPointsWinningTeam.map((extraPoint) =>
           extraPoint == ExtraPoint.fuchsAmEnd ? roundValue += 2 : roundValue++);
 
-      roundValue += announcementsWinningTeam.length;
-      roundValue += announcementsLoosingTeam.length;
 
       return roundValue;
     }
