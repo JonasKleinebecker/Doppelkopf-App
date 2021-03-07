@@ -21,8 +21,8 @@ class Round {
   int gesprochenRe = 0;
   int gesprochenContra = 0;
 
-  List<ExtraPoint> extraPointsRe;
-  List<ExtraPoint> extraPointsContra;
+  List<ExtraPoint> extraPointsRe = [];
+  List<ExtraPoint> extraPointsContra = [];
 
   int roundValue;
 
