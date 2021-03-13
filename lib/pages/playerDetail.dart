@@ -63,6 +63,24 @@ class _playerDetailState extends State<playerDetail> {
         body: Center(
           child: Column(
             children: [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 50.0),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Transform.scale(
+                    scale: 3.0,
+                    child: Hero(
+                      tag:
+                          "playerAvatar ${widget.player.name}",
+                      child: CircleAvatar(
+                        backgroundColor: Colors.blueGrey[800],
+                        child: Text(widget.player.name.substring(0, 1),
+                            ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               Text(widget.player.name),
               Text(widget.player.age),
               ElevatedButton(

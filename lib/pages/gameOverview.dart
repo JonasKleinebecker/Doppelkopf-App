@@ -1,6 +1,7 @@
 import 'package:doppelkopf/classes/Game.dart';
 import 'package:doppelkopf/classes/Player.dart';
 import 'package:doppelkopf/classes/Round.dart';
+import 'package:doppelkopf/customWidgets/CustomCheckbox.dart';
 import 'package:doppelkopf/pages/players.dart';
 import 'package:flutter/material.dart';
 import 'package:doppelkopf/pages/home.dart';
@@ -8,6 +9,22 @@ import 'package:doppelkopf/pages/startGame.dart';
 
 class GameOverview extends StatefulWidget {
   Game game;
+
+  List<String> fuchsImagePaths = [
+    "assets/images/Ace_Of_Diamonds_greyed_out.svg",
+    "assets/images/Ace_Of_Diamonds.svg",
+    "assets/images/Ace_Of_Diamonds_plus_plus.svg"
+  ];
+
+  List<String> charlieImagePaths = [
+    "assets/images/Jack_Of_Clubs_greyed_out.svg",
+    "assets/images/Jack_Of_Clubs.svg"
+  ];
+
+  List<String> doppelkopfImagePaths = [
+    "assets/images/4erDoppelkopf_greyed_out.svg",
+    "assets/images/4erDoppelkopf.svg"
+  ];
   GameOverview(List<Player> activePlayers) {
     game = new Game(activePlayers);
   }
@@ -42,6 +59,9 @@ class _GameOverviewState extends State<GameOverview> {
         context: context,
         builder: (context) {
           return StatefulBuilder(builder: (context, setStateDialog) {
+            double customCheckboxWidth = 80;
+            double customCheckboxHeight = 85;
+
             return AlertDialog(
               title: Text("Enter the new Round"),
               content: Column(children: [
@@ -161,7 +181,7 @@ class _GameOverviewState extends State<GameOverview> {
                       width: 150,
                       child: CheckboxListTile(
                           value: round.gesprochenContra > 0 ? true : false,
-                          title: Text("Re"),
+                          title: Text("Contra"),
                           onChanged: (newValue) {
                             setStateDialog(() {
                               if (newValue) {
@@ -211,116 +231,202 @@ class _GameOverviewState extends State<GameOverview> {
                   children: [Text("Re"), Text("Contra")],
                 ),
                 Text("Fuchs"),
-                Row(
+                Padding(
+                  padding: const EdgeInsets.only(left: 23.63),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                           Container(
+                            width: customCheckboxWidth,
+                            height: customCheckboxHeight,
+                            child: CustomCheckbox(
+                              onTap: () {
+                                switch (extraPointsToCheckBoxValue(
+                                    round, ExtraPoint.fuchs, Team.re, 0)) {
+                                  case 0:
+                                    {
+                                      round.extraPointsRe.add(ExtraPoint.fuchs);
+                                    }
+                                    break;
+                                  case 1:
+                                    {
+                                      round.extraPointsRe
+                                          .add(ExtraPoint.fuchsAmEnd);
+                                    }
+                                    break;
+                                  case 2:
+                                    {
+                                      round.extraPointsRe.remove(ExtraPoint.fuchs);
+                                      round.extraPointsRe
+                                          .remove(ExtraPoint.fuchsAmEnd);
+                                    }
+                                    break;
+                                }
+                                setStateDialog(() {});
+                              },
+                              value: extraPointsToCheckBoxValue(
+                                  round, ExtraPoint.fuchs, Team.re, 0),
+                              imagePaths: widget.fuchsImagePaths,
+                            ),
+                          ),
+ 
+                        Container(
+                          width: customCheckboxWidth,
+                          height: customCheckboxHeight,
+                          child: CustomCheckbox(
+                            onTap: () {
+                              switch (extraPointsToCheckBoxValue(
+                                  round, ExtraPoint.fuchs, Team.contra, 0)) {
+                                case 0:
+                                  {
+                                    round.extraPointsContra.add(ExtraPoint.fuchs);
+                                  }
+                                  break;
+                                case 1:
+                                  {
+                                    round.extraPointsContra
+                                        .add(ExtraPoint.fuchsAmEnd);
+                                  }
+                                  break;
+                                case 2:
+                                  {
+                                    round.extraPointsContra
+                                        .remove(ExtraPoint.fuchs);
+                                    round.extraPointsContra
+                                        .remove(ExtraPoint.fuchsAmEnd);
+                                  }
+                                  break;
+                              }
+                              setStateDialog(() {});
+                            },
+                            value: extraPointsToCheckBoxValue(
+                                round, ExtraPoint.fuchs, Team.contra, 0),
+                            imagePaths: widget.fuchsImagePaths,
+                          ),
+                        ),
+                      ]),
+                ),
+                Text("Doppelkopf"),
+                Padding(
+                  padding: const EdgeInsets.only(left: 23.63),
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Checkbox(
-                        value: round.extraPointsRe.contains(ExtraPoint.fuchs),
-                        onChanged: (newValue) {
-                          setStateDialog(() {
-                            if (newValue) {
-                              round.extraPointsRe.add(ExtraPoint.fuchs);
-                            } else {
-                              if (round.extraPointsRe
-                                  .contains(ExtraPoint.fuchs)) {
-                                round.extraPointsRe.remove(ExtraPoint.fuchs);
-                              }
+                      Container(
+                        width: customCheckboxWidth,
+                        height: customCheckboxHeight ,
+                        child: CustomCheckbox(
+                          onTap: () {
+                            switch (extraPointsToCheckBoxValue(
+                                round, ExtraPoint.doppelkopf, Team.re, 0)) {
+                              case 0:
+                                {
+                                  round.extraPointsRe.add(ExtraPoint.doppelkopf);
+                                }
+                                break;
+                              case 1:
+                                {
+                                  round.extraPointsRe
+                                      .remove(ExtraPoint.doppelkopf);
+                                }
+                                break;
                             }
-                          });
-                        },
+                            setStateDialog(() {});
+                          },
+                          value: extraPointsToCheckBoxValue(
+                              round, ExtraPoint.doppelkopf, Team.re, 0),
+                          imagePaths: widget.doppelkopfImagePaths,
+                        ),
                       ),
-                      Checkbox(
-                        value:
-                            round.extraPointsContra.contains(ExtraPoint.fuchs),
-                        onChanged: (newValue) {
-                          setStateDialog(() {
-                            if (newValue) {
-                              round.extraPointsContra.add(ExtraPoint.fuchs);
-                            } else {
-                              if (round.extraPointsContra
-                                  .contains(ExtraPoint.fuchs)) {
-                                round.extraPointsContra
-                                    .remove(ExtraPoint.fuchs);
-                              }
+                      Container(
+                        width: customCheckboxWidth,
+                        height: customCheckboxHeight,
+                        child: CustomCheckbox(
+                          onTap: () {
+                            switch (extraPointsToCheckBoxValue(
+                                round, ExtraPoint.doppelkopf, Team.contra, 0)) {
+                              case 0:
+                                {
+                                  round.extraPointsContra
+                                      .add(ExtraPoint.doppelkopf);
+                                }
+                                break;
+                              case 1:
+                                {
+                                  round.extraPointsContra
+                                      .remove(ExtraPoint.doppelkopf);
+                                }
+                                break;
                             }
-                          });
-                        },
-                      ),
-                    ]),
-                Text("Doppelkop"),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Checkbox(
-                      value:
-                          round.extraPointsRe.contains(ExtraPoint.doppelkopf),
-                      onChanged: (newValue) {
-                        setStateDialog(() {
-                          if (newValue) {
-                            round.extraPointsRe.add(ExtraPoint.doppelkopf);
-                          } else {
-                            if (round.extraPointsRe
-                                .contains(ExtraPoint.doppelkopf)) {
-                              round.extraPointsRe.remove(ExtraPoint.doppelkopf);
-                            }
-                          }
-                        });
-                      },
-                    ),
-                    Checkbox(
-                      value: round.extraPointsContra
-                          .contains(ExtraPoint.doppelkopf),
-                      onChanged: (newValue) {
-                        setStateDialog(() {
-                          if (newValue) {
-                            round.extraPointsContra.add(ExtraPoint.doppelkopf);
-                          } else {
-                            if (round.extraPointsContra
-                                .contains(ExtraPoint.doppelkopf)) {
-                              round.extraPointsContra
-                                  .remove(ExtraPoint.doppelkopf);
-                            }
-                          }
-                          
-                        });
-                      },
-                    ),
-                  ],
+                            setStateDialog(() {});
+                          },
+                          value: extraPointsToCheckBoxValue(
+                              round, ExtraPoint.doppelkopf, Team.contra, 0),
+                          imagePaths: widget.doppelkopfImagePaths,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
                 Text("Charlie am End"),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Checkbox(
-                      value: round.extraPointsRe.contains(ExtraPoint.charlie),
-                      onChanged: (newValue) {
-                        setStateDialog((){ if (newValue) {
-                          round.extraPointsRe.add(ExtraPoint.charlie);
-                        } else {
-                          if (round.extraPointsRe
-                              .contains(ExtraPoint.charlie)) {
-                            round.extraPointsRe.remove(ExtraPoint.charlie);
-                          }
-                          }
-                        });
-                      },
-                    ),
-                    Checkbox(
-                      value:
-                          round.extraPointsContra.contains(ExtraPoint.charlie),
-                      onChanged: (newValue) {
-                        setStateDialog((){ if (newValue) {
-                          round.extraPointsContra.add(ExtraPoint.charlie);
-                        } else {
-                          if (round.extraPointsContra
-                              .contains(ExtraPoint.charlie)) {
-                            round.extraPointsContra.remove(ExtraPoint.charlie);
-                          }
-                          }
-                        });
-                      },
-                    ),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.only(left: 23.63),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: customCheckboxWidth,
+                        height: customCheckboxHeight,
+                        child: CustomCheckbox(
+                          onTap: () {
+                            switch (extraPointsToCheckBoxValue(
+                                round, ExtraPoint.charlie, Team.re, 0)) {
+                              case 0:
+                                {
+                                  round.extraPointsRe.add(ExtraPoint.charlie);
+                                }
+                                break;
+                              case 1:
+                                {
+                                  round.extraPointsRe.remove(ExtraPoint.charlie);
+                                }
+                                break;
+                            }
+                            setStateDialog(() {});
+                          },
+                          value: extraPointsToCheckBoxValue(
+                              round, ExtraPoint.charlie, Team.re, 0),
+                          imagePaths: widget.charlieImagePaths,
+                        ),
+                      ),
+                      Container(
+                        width: customCheckboxWidth,
+                        height: customCheckboxHeight,
+                        child: CustomCheckbox(
+                          onTap: () {
+                            switch (extraPointsToCheckBoxValue(
+                                round, ExtraPoint.charlie, Team.contra, 0)) {
+                              case 0:
+                                {
+                                  round.extraPointsContra.add(ExtraPoint.charlie);
+                                }
+                                break;
+                              case 1:
+                                {
+                                  round.extraPointsContra
+                                      .remove(ExtraPoint.charlie);
+                                }
+                                break;
+                            }
+                            setStateDialog(() {});
+                          },
+                          value: extraPointsToCheckBoxValue(
+                              round, ExtraPoint.charlie, Team.contra, 0),
+                          imagePaths: widget.charlieImagePaths,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ]),
               actions: [
@@ -355,6 +461,50 @@ class _GameOverviewState extends State<GameOverview> {
       return "-";
     } else {
       return "keine $announcements";
+    }
+  }
+
+  int extraPointsToCheckBoxValue(
+      Round round, ExtraPoint extraPoint, Team team, int i) {
+    // gibt eine Wert zurück, mit dem die Fuchs-Checkboxen ihren State ändern
+    List<ExtraPoint> extraPoints;
+
+    if (team == Team.re) {
+      extraPoints = round.extraPointsRe;
+    } else {
+      extraPoints = round.extraPointsContra;
+    }
+
+    //wie oft ist der extraPoint in extraPoints ?
+    if (extraPoints
+            .where((element) =>
+                element ==
+                extraPoint) //finde alle Einträge von extraPoint in extraPoints
+            .toList() //mache aus diesen Einträgen eine neue Liste
+            .length >
+        (i)) {
+      // und überprüfe die Länge. i gibt an, für den wievielten extraPoint wir überprüfen (z.B. der zweite Fuchs, der dritte Doppelkopf etc.)
+
+      //wenn der extraPoint ein Fuchs ist, wird zusätzlich nach Fuchs am End gesucht
+      if (extraPoint == ExtraPoint.fuchs) {
+        if (extraPoints
+                .where((element) =>
+                    element ==
+                    ExtraPoint
+                        .fuchsAmEnd) // selber Aufbau wie oben. Diesmal hardgecoded mit Fuchs am Emd
+                .toList()
+                .length >
+            i) {
+          return 2; // wrd nur bei Fuchs am End zurückgegeben
+
+        } else {
+          return 1;
+        }
+      } else {
+        return 1; // die zu überprüfende Checkbox soll aktiviert dargestellt werden
+      }
+    } else {
+      return 0; // die zu überprüfende Checkbox soll inaktiv dargestellt werden
     }
   }
 }

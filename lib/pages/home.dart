@@ -1,4 +1,6 @@
+import 'package:doppelkopf/customWidgets/CustomCheckbox.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class Home extends StatelessWidget {
   @override
@@ -34,7 +36,7 @@ class Home extends StatelessWidget {
                           color: Colors.grey[900],
                         )),
                   ),
-                )
+                ),
               ],
             )));
   }

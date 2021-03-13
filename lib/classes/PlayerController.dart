@@ -5,18 +5,23 @@ import 'Player.dart';
 
 class PlayerController {
   static List<Player> playerList = [];
+  static bool isLoaded = false;
 
-  static List<Player> get getPlayerList => playerList;
+  static List<Player> get getPlayerList{
+    return playerList;
+  }
 
   static set setPlayerList(List playerList) =>
       PlayerController.playerList = playerList;
 
   static Future<void> setPlayersFromSharedPreferences() async {
+    isLoaded = true;
+
     final prefs = await SharedPreferences.getInstance();
     String serializedPlayerList = prefs.getString("playerList");
     if (serializedPlayerList != null) {
       List playerStrings = json.decode(serializedPlayerList);
-      playerList =    
+      playerList =
           playerStrings.map((player) => Player.fromJson(player)).toList();
     }
   }

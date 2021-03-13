@@ -76,16 +76,21 @@ class _PlayersState extends State<Players> {
             : 0,
         itemBuilder: (BuildContext context, int index) {
           return ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.blueGrey[800],
-                child: Text(
-                    PlayerController.getPlayerList[index].name.substring(0, 1)),
+              leading: Hero(
+                tag:
+                    "playerAvatar ${PlayerController.getPlayerList[index].name}",
+                child: CircleAvatar(
+                  backgroundColor: Colors.blueGrey[800],
+                  child: Text(PlayerController.getPlayerList[index].name
+                      .substring(0, 1)),
+                ),
               ),
               title: Text(PlayerController.getPlayerList[index].name),
               onTap: () async {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (BuildContext context) {
-                  return playerDetail(PlayerController.getPlayerList[index]); //TODO: Refactor
+                  return playerDetail(
+                      PlayerController.getPlayerList[index]); //TODO: Refactor
                 }));
                 setState(() {}); //Reload if Back Button is pressed
               });
