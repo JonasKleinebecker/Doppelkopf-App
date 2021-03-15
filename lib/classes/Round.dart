@@ -6,15 +6,15 @@ import 'package:doppelkopf/pages/startGame.dart';
 import 'Player.dart';
 
 class Round {
-  List<Player> playersContra;
-  List<Player> playersRe;
+  //List<Player> playersContra;
+  //List<Player> playersRe;
   List<Player> spectators;
   List<Player> winners = [];
 
   Player dealer;
   Team winningTeam;
-  Solo soloPlayed;
-  bool bockrunde;
+  Solo soloPlayed = Solo.none;
+  bool bockrunde = false;
 
   int winningTeamPoints = 120;
   int announcementsRe = 120;
@@ -29,7 +29,6 @@ class Round {
 
   int calculateRoundValue() {
     int roundValue = 0;
-    int scoreToWin = 121;
     int announcementsWinningTeam;
     int announcementsLoosingTeam;
     List<ExtraPoint> extraPointsWinningTeam;
@@ -49,19 +48,26 @@ class Round {
       extraPointsLoosingTeam = extraPointsRe;
     }
     //Startpunkt für die extraPunkte Berechnung durch Punkte bestimmen
-    scoreToWin = announcementsWinningTeam + 1; //TODO: Berechnung
-
     if (soloPlayed == Solo.none) {
       if (winningTeam == Team.draw) {
         return 0;
       }
+      roundValue = 1; //ein Punkt fürs gewinnen gibts immer
 
-      roundValue = (winningTeamPoints - scoreToWin) %
-          30; //pro 30 Punkte über dem Score to Win gibt es einen Extra Punkt
-      extraPointsLoosingTeam.map((extraPoint) =>
-          extraPoint == ExtraPoint.fuchsAmEnd ? roundValue -= 2 : roundValue--);
-      extraPointsWinningTeam.map((extraPoint) =>
-          extraPoint == ExtraPoint.fuchsAmEnd ? roundValue += 2 : roundValue++);
+      roundValue += (winningTeamPoints - announcementsLoosingTeam) % 30;
+
+      roundValue += ((announcementsWinningTeam - 120).abs().toInt()) ~/
+          30; //Ansagen werden immer dem Gewinner zugerechnet, egal von wem Sie kommen
+
+      roundValue += gesprochenRe;
+      roundValue += gesprochenContra;
+
+      roundValue -= extraPointsLoosingTeam.length;
+      roundValue += extraPointsWinningTeam.length;
+
+      if (bockrunde) {
+        roundValue *= 2;
+      }
 
       return roundValue;
     }

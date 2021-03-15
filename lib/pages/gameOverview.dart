@@ -41,8 +41,6 @@ class GameOverview extends StatefulWidget {
 }
 
 class _GameOverviewState extends State<GameOverview> {
-  List<Player> winners = [];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -460,8 +458,8 @@ class _GameOverviewState extends State<GameOverview> {
                                           setStateDialog(() {
                                             if (newValue) {
                                               round.winningTeam = Team.re;
-                                              while (winners.length > 2) {
-                                                winners.removeLast();
+                                              while (round.winners.length > 2) {
+                                                round.winners.removeLast();
                                               }
                                             } else {
                                               round.winningTeam = null;
@@ -502,7 +500,7 @@ class _GameOverviewState extends State<GameOverview> {
                                               setStateDialog(() {
                                                 if (newValue) {
                                                   round.winningTeam = Team.draw;
-                                                  winners =
+                                                  round.winners =
                                                       []; //bei einem Unentschieden gibt es keine Sieger
                                                 } else {
                                                   round.winningTeam = null;
@@ -519,44 +517,45 @@ class _GameOverviewState extends State<GameOverview> {
                                         (BuildContext context, int index) {
                                       return ListTile(
                                         onTap: () {
-                                            if (winners.length > 0) {
-                                              //für den Fall, dass winners leer ist.
-                                              if (winners.contains(widget
+                                          if (round.winners.length > 0) {
+                                            //für den Fall, dass winners leer ist.
+                                            if (round.winners.contains(widget
+                                                .game.players.keys
+                                                .elementAt(index))) {
+                                              round.winners.remove(widget
                                                   .game.players.keys
-                                                  .elementAt(index))) {
-                                                winners.remove(widget
-                                                    .game.players.keys
-                                                    .elementAt(index));
-                                              } else{
-                                           if (round.winningTeam == Team.draw ||
-                                              (round.winningTeam == Team.re &&
-                                                  winners.length >= 2) ||
-                                              winners.length ==
-                                                  (widget.playersPerRound -
-                                                      1)) {
-                                            //TODO: Invalid input feedback;
+                                                  .elementAt(index));
+                                            } else {
+                                              if (round.winningTeam ==
+                                                      Team.draw ||
+                                                  (round.winningTeam ==
+                                                          Team.re &&
+                                                      round.winners.length >=
+                                                          2) ||
+                                                  round.winners.length ==
+                                                      (widget.playersPerRound -
+                                                          1)) {
+                                                //TODO: Invalid input feedback;
 
-                                          }   
-                                              else {
-                                                winners.add(widget
+                                              } else if (round.winningTeam !=
+                                                  Team.draw) {
+                                                round.winners.add(widget
                                                     .game.players.keys
                                                     .elementAt(index));
                                               }
                                             }
                                           } else {
-                                              winners.add(widget
-                                                  .game.players.keys
-                                                  .elementAt(index));
-                                            }
+                                            round.winners.add(widget
+                                                .game.players.keys
+                                                .elementAt(index));
+                                          }
                                           setStateDialog(() {});
-                                          },
-
+                                        },
                                         title: Card(
                                             color: getPlayerCardColor(
                                                 round,
                                                 widget.game.players.keys
                                                     .elementAt(index),
-                                                winners,
                                                 widget.playersPerRound),
                                             elevation: 5.0,
                                             shape: RoundedRectangleBorder(
@@ -574,7 +573,23 @@ class _GameOverviewState extends State<GameOverview> {
                                                       .name),
                                                 ))),
                                       );
-                                    })
+                                    }),
+                                Slider(
+                                  value:
+                                      round.winningTeamPoints.toDouble() / 30,
+                                  label: "${round.winningTeamPoints}+",
+                                  onChanged: (newValue) {
+                                    round.winningTeamPoints =
+                                        newValue.toInt() * 30;
+                                    setStateDialog(() {});
+                                  },
+                                  min: 0.0,
+                                  max: 8.0,
+                                  divisions: 8,
+                                ),
+                                isRoundInputValid(round, widget.playersPerRound)
+                                    ? Text("${round.calculateRoundValue()}")
+                                    : Text("-"),
                               ]),
                         ],
                       ),
@@ -588,9 +603,9 @@ class _GameOverviewState extends State<GameOverview> {
               ),
               actions: [
                 ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(round);
-                    },
+                    onPressed: isRoundInputValid(round, widget.playersPerRound)
+                        ? () => submitRound()
+                        : null,
                     child: Text("Submit")),
                 ElevatedButton(
                     onPressed: () {
@@ -664,44 +679,64 @@ class _GameOverviewState extends State<GameOverview> {
       return 0; // die zu überprüfende Checkbox soll inaktiv dargestellt werden
     }
   }
-}
 
-Color getPlayerCardColor(
-    Round round, Player player, List<Player> winners, int playersPerRound) {
-  if (winners.contains(player)) {
-    return Colors.lightGreenAccent; //Sieger werden grün hinterlegt
-  } else {
-    switch (round.winningTeam) {
-      case Team.re:
-        {
-          if (winners.length > 1) {
-            return Colors
-                .redAccent; //wenn per Aussschlussverfahren klar ist, wer die Verlierer sind, werden diese Rot angezeigt
-          } else {
-            return Colors
-                .grey; //solange unklar ist, wer verloren hat, werden alle außer die Sieger grau angezeigt
-          }
+  void submitRound() {
+    Navigator.of(context).pop(null);
+  }
+
+  bool isRoundInputValid(Round round, int playersPerRound) {
+    if (round.winningTeam == null || (round.gesprochenContra == 0 && round.gesprochenRe == 0)) {
+      return false;
+    } else {
+      if (round.winningTeam == Team.re) {
+        if (round.winners.length < 1 || round.winners.length > 2) {
+          return false;
         }
-        break;
+      } else if (round.winningTeam == Team.contra) {
+        if (round.winners.length < (playersPerRound - 2)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 
-      case Team.contra:
-        {
-          if (winners.length > (playersPerRound - 3)) {
-            return Colors.redAccent; //wieder Ausschlussverfahren
-          } else {
+  Color getPlayerCardColor(Round round, Player player, int playersPerRound) {
+    if (round.winners.contains(player)) {
+      return Colors.lightGreenAccent; //Sieger werden grün hinterlegt
+    } else {
+      switch (round.winningTeam) {
+        case Team.re:
+          {
+            if (round.winners.length > 1) {
+              return Colors
+                  .redAccent; //wenn per Aussschlussverfahren klar ist, wer die Verlierer sind, werden diese Rot angezeigt
+            } else {
+              return Colors
+                  .grey; //solange unklar ist, wer verloren hat, werden alle außer die Sieger grau angezeigt
+            }
+          }
+          break;
+
+        case Team.contra:
+          {
+            if (round.winners.length > (playersPerRound - 3)) {
+              return Colors.redAccent; //wieder Ausschlussverfahren
+            } else {
+              return Colors.grey;
+            }
+          }
+          break;
+        case Team.draw:
+          {
             return Colors.grey;
           }
-        }
-        break;
-      case Team.draw:
-        {
-          return Colors.grey;
-        }
-        break;
-      default:
-        {
-          return Colors.grey; //Wenn noch nichts ausgewählt wurde
-        }
+          break;
+        default:
+          {
+            return Colors.grey; //Wenn noch nichts ausgewählt wurde
+          }
+      }
     }
   }
 }
