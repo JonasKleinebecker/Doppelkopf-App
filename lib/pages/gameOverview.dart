@@ -6,9 +6,11 @@ import 'package:doppelkopf/pages/players.dart';
 import 'package:flutter/material.dart';
 import 'package:doppelkopf/pages/home.dart';
 import 'package:doppelkopf/pages/startGame.dart';
+import 'package:page_view_indicators/page_view_indicators.dart';
 
 class GameOverview extends StatefulWidget {
   Game game;
+  int playersPerRound;
 
   List<String> fuchsImagePaths = [
     "assets/images/Ace_Of_Diamonds_greyed_out.svg",
@@ -27,6 +29,11 @@ class GameOverview extends StatefulWidget {
   ];
   GameOverview(List<Player> activePlayers) {
     game = new Game(activePlayers);
+    if (activePlayers.length > 5) {
+      playersPerRound = 5;
+    } else {
+      playersPerRound = activePlayers.length;
+    }
   }
 
   @override
@@ -34,18 +41,26 @@ class GameOverview extends StatefulWidget {
 }
 
 class _GameOverviewState extends State<GameOverview> {
+  List<Player> winners = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView.builder(
           itemCount: widget.game.getRounds().length,
           itemBuilder: (BuildContext context, int index) {
-            return ListTile(title: Text("test"));
+            return ListTile(
+                title: Text(
+                    "${widget.game.getRounds()[index].extraPointsRe.length}"));
           }),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: () {
-          createAddRoundDialog();
+        onPressed: () async {
+          await createAddRoundDialog().then((onValue) {
+            if (onValue != null) {
+              widget.game.getRounds().add(onValue);
+            }
+          });
           setState(() {});
         },
       ),
@@ -54,385 +69,527 @@ class _GameOverviewState extends State<GameOverview> {
 
   Future<Round> createAddRoundDialog() {
     Round round = Round();
+    final PageController pageViewController = PageController(initialPage: 0);
+    final ValueNotifier<int> currentPageNotifier = ValueNotifier<int>(0);
 
     return showDialog(
         context: context,
         builder: (context) {
           return StatefulBuilder(builder: (context, setStateDialog) {
-            double customCheckboxWidth = 80;
-            double customCheckboxHeight = 85;
+            final double customCheckboxWidth = 80;
+            final double customCheckboxHeight = 85;
 
             return AlertDialog(
               title: Text("Enter the new Round"),
-              content: Column(children: [
-                Text("Who won?"),
-                Row(
+              content: Container(
+                width: 1000000,
+                height: 1000000,
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
                   children: [
-                    Container(
-                      height: 50,
-                      width: 100,
-                      child: CheckboxListTile(
-                        value: round.winningTeam == Team.re ? true : false,
-                        title: Text("Re"),
-                        onChanged: (newValue) {
-                          setStateDialog(() {
-                            if (newValue) {
-                              round.winningTeam = Team.re;
-                            } else {
-                              round.winningTeam = null;
-                            }
-                          });
+                    Expanded(
+                      child: PageView(
+                        controller: pageViewController,
+                        onPageChanged: (int index) {
+                          currentPageNotifier.value = index;
                         },
-                      ),
-                    ),
-                    Container(
-                      height: 50,
-                      width: 100,
-                      child: CheckboxListTile(
-                        value: round.winningTeam == Team.contra ? true : false,
-                        title: Text("Contra"),
-                        onChanged: (newValue) {
-                          setStateDialog(() {
-                            if (newValue) {
-                              round.winningTeam = Team.contra;
-                            } else {
-                              round.winningTeam = null;
-                            }
-                          });
-                        },
-                      ),
-                    ),
-                    Container(
-                        height: 50,
-                        width: 100,
-                        child: CheckboxListTile(
-                            value:
-                                round.winningTeam == Team.draw ? true : false,
-                            title: Text("Draw"),
-                            onChanged: (newValue) {
-                              setStateDialog(() {
-                                if (newValue) {
-                                  round.winningTeam = Team.draw;
-                                } else {
-                                  round.winningTeam = null;
-                                }
-                              });
-                            }))
-                  ],
-                ),
-                Text("Ansagen Re:"),
-                Row(
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 150,
-                      child: CheckboxListTile(
-                          value: round.gesprochenRe > 0 ? true : false,
-                          title: Text("Re"),
-                          onChanged: (newValue) {
-                            setStateDialog(() {
-                              if (newValue) {
-                                round.gesprochenRe = 1;
-                              } else {
-                                round.gesprochenRe = 0;
-                              }
-                            });
-                          }),
-                    ),
-                    Container(
-                      height: 50,
-                      width: 150,
-                      child: CheckboxListTile(
-                          value: round.gesprochenRe == 2 ? true : false,
-                          title: Text("Vorweg"),
-                          onChanged: (newValue) {
-                            setStateDialog(() {
-                              if (newValue) {
-                                round.gesprochenRe = 2;
-                              } else {
-                                round.gesprochenRe = 1;
-                              }
-                            });
-                          }),
-                    ),
-                  ],
-                ),
-                Slider(
-                  onChanged: (selectedValue) {
-                    setStateDialog(() => round
-                        .announcementsRe = (selectedValue -
-                            120)
-                        .abs()
-                        .toInt()); // -120 und dann Betrag ziehen, ermöglicht die Anzeige von hoch nach niedrig
-                  },
-                  min: 0,
-                  max: 120,
-                  divisions: 4,
-                  value: (round.announcementsRe - 120)
-                      .abs()
-                      .toDouble(), // -120 und dann Betrag ziehen ermöglicht das anzeigen von hoch nach niedrig
-                  label: generateAnnouncementsLabel(Team.re, round),
-                ),
-                Text("Ansagen Contra:"),
-                Row(
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 150,
-                      child: CheckboxListTile(
-                          value: round.gesprochenContra > 0 ? true : false,
-                          title: Text("Contra"),
-                          onChanged: (newValue) {
-                            setStateDialog(() {
-                              if (newValue) {
-                                round.gesprochenContra = 1;
-                              } else {
-                                round.gesprochenContra = 0;
-                              }
-                            });
-                          }),
-                    ),
-                    Container(
-                      height: 50,
-                      width: 150,
-                      child: CheckboxListTile(
-                          value: round.gesprochenContra == 2 ? true : false,
-                          title: Text("Vorweg"),
-                          onChanged: (newValue) {
-                            setStateDialog(() {
-                              if (newValue) {
-                                round.gesprochenContra = 2;
-                              } else {
-                                round.gesprochenContra = 1;
-                              }
-                            });
-                          }),
-                    ),
-                  ],
-                ),
-                Slider(
-                  onChanged: (selectedValue) {
-                    setStateDialog(() => round
-                        .announcementsContra = (selectedValue -
-                            120)
-                        .abs()
-                        .toInt()); // -120 und dann Betrag ziehen, ermöglicht die Anzeige von hoch nach niedrig
-                  },
-                  min: 0,
-                  max: 120,
-                  divisions: 4,
-                  value: (round.announcementsContra - 120)
-                      .abs()
-                      .toDouble(), // -120 und dann Betrag ziehen ermöglicht das anzeigen von hoch nach niedrig
-                  label: generateAnnouncementsLabel(Team.contra, round),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text("Re"), Text("Contra")],
-                ),
-                Text("Fuchs"),
-                Padding(
-                  padding: const EdgeInsets.only(left: 23.63),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                           Container(
-                            width: customCheckboxWidth,
-                            height: customCheckboxHeight,
-                            child: CustomCheckbox(
-                              onTap: () {
-                                switch (extraPointsToCheckBoxValue(
-                                    round, ExtraPoint.fuchs, Team.re, 0)) {
-                                  case 0:
-                                    {
-                                      round.extraPointsRe.add(ExtraPoint.fuchs);
-                                    }
-                                    break;
-                                  case 1:
-                                    {
-                                      round.extraPointsRe
-                                          .add(ExtraPoint.fuchsAmEnd);
-                                    }
-                                    break;
-                                  case 2:
-                                    {
-                                      round.extraPointsRe.remove(ExtraPoint.fuchs);
-                                      round.extraPointsRe
-                                          .remove(ExtraPoint.fuchsAmEnd);
-                                    }
-                                    break;
-                                }
-                                setStateDialog(() {});
-                              },
-                              value: extraPointsToCheckBoxValue(
-                                  round, ExtraPoint.fuchs, Team.re, 0),
-                              imagePaths: widget.fuchsImagePaths,
+                        children: [
+                          Column(mainAxisSize: MainAxisSize.min, children: [
+                            Text("Ansagen Re:"),
+                            Row(
+                              children: [
+                                Container(
+                                  height: 50,
+                                  width: 150,
+                                  child: CheckboxListTile(
+                                      value:
+                                          round.gesprochenRe > 0 ? true : false,
+                                      title: Text("Re"),
+                                      onChanged: (newValue) {
+                                        setStateDialog(() {
+                                          if (newValue) {
+                                            round.gesprochenRe = 1;
+                                          } else {
+                                            round.gesprochenRe = 0;
+                                          }
+                                        });
+                                      }),
+                                ),
+                                Container(
+                                  height: 50,
+                                  width: 150,
+                                  child: CheckboxListTile(
+                                      value: round.gesprochenRe == 2
+                                          ? true
+                                          : false,
+                                      title: Text("Vorweg"),
+                                      onChanged: (newValue) {
+                                        setStateDialog(() {
+                                          if (newValue) {
+                                            round.gesprochenRe = 2;
+                                          } else {
+                                            round.gesprochenRe = 1;
+                                          }
+                                        });
+                                      }),
+                                ),
+                              ],
                             ),
-                          ),
- 
-                        Container(
-                          width: customCheckboxWidth,
-                          height: customCheckboxHeight,
-                          child: CustomCheckbox(
-                            onTap: () {
-                              switch (extraPointsToCheckBoxValue(
-                                  round, ExtraPoint.fuchs, Team.contra, 0)) {
-                                case 0:
-                                  {
-                                    round.extraPointsContra.add(ExtraPoint.fuchs);
-                                  }
-                                  break;
-                                case 1:
-                                  {
-                                    round.extraPointsContra
-                                        .add(ExtraPoint.fuchsAmEnd);
-                                  }
-                                  break;
-                                case 2:
-                                  {
-                                    round.extraPointsContra
-                                        .remove(ExtraPoint.fuchs);
-                                    round.extraPointsContra
-                                        .remove(ExtraPoint.fuchsAmEnd);
-                                  }
-                                  break;
-                              }
-                              setStateDialog(() {});
-                            },
-                            value: extraPointsToCheckBoxValue(
-                                round, ExtraPoint.fuchs, Team.contra, 0),
-                            imagePaths: widget.fuchsImagePaths,
-                          ),
-                        ),
-                      ]),
-                ),
-                Text("Doppelkopf"),
-                Padding(
-                  padding: const EdgeInsets.only(left: 23.63),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: customCheckboxWidth,
-                        height: customCheckboxHeight ,
-                        child: CustomCheckbox(
-                          onTap: () {
-                            switch (extraPointsToCheckBoxValue(
-                                round, ExtraPoint.doppelkopf, Team.re, 0)) {
-                              case 0:
-                                {
-                                  round.extraPointsRe.add(ExtraPoint.doppelkopf);
-                                }
-                                break;
-                              case 1:
-                                {
-                                  round.extraPointsRe
-                                      .remove(ExtraPoint.doppelkopf);
-                                }
-                                break;
-                            }
-                            setStateDialog(() {});
-                          },
-                          value: extraPointsToCheckBoxValue(
-                              round, ExtraPoint.doppelkopf, Team.re, 0),
-                          imagePaths: widget.doppelkopfImagePaths,
-                        ),
+                            Slider(
+                              onChanged: (selectedValue) {
+                                setStateDialog(() => round
+                                    .announcementsRe = (selectedValue -
+                                        120)
+                                    .abs()
+                                    .toInt()); // -120 und dann Betrag ziehen, ermöglicht die Anzeige von hoch nach niedrig
+                              },
+                              min: 0,
+                              max: 120,
+                              divisions: 4,
+                              value: (round.announcementsRe - 120)
+                                  .abs()
+                                  .toDouble(), // -120 und dann Betrag ziehen ermöglicht das anzeigen von hoch nach niedrig
+                              label: generateAnnouncementsLabel(Team.re, round),
+                            ),
+                            Text("Ansagen Contra:"),
+                            Row(
+                              children: [
+                                Container(
+                                  height: 50,
+                                  width: 150,
+                                  child: CheckboxListTile(
+                                      value: round.gesprochenContra > 0
+                                          ? true
+                                          : false,
+                                      title: Text("Contra"),
+                                      onChanged: (newValue) {
+                                        setStateDialog(() {
+                                          if (newValue) {
+                                            round.gesprochenContra = 1;
+                                          } else {
+                                            round.gesprochenContra = 0;
+                                          }
+                                        });
+                                      }),
+                                ),
+                                Container(
+                                  height: 50,
+                                  width: 150,
+                                  child: CheckboxListTile(
+                                      value: round.gesprochenContra == 2
+                                          ? true
+                                          : false,
+                                      title: Text("Vorweg"),
+                                      onChanged: (newValue) {
+                                        setStateDialog(() {
+                                          if (newValue) {
+                                            round.gesprochenContra = 2;
+                                          } else {
+                                            round.gesprochenContra = 1;
+                                          }
+                                        });
+                                      }),
+                                ),
+                              ],
+                            ),
+                            Slider(
+                              onChanged: (selectedValue) {
+                                setStateDialog(() => round
+                                    .announcementsContra = (selectedValue -
+                                        120)
+                                    .abs()
+                                    .toInt()); // -120 und dann Betrag ziehen, ermöglicht die Anzeige von hoch nach niedrig
+                              },
+                              min: 0,
+                              max: 120,
+                              divisions: 4,
+                              value: (round.announcementsContra - 120)
+                                  .abs()
+                                  .toDouble(), // -120 und dann Betrag ziehen ermöglicht das anzeigen von hoch nach niedrig
+                              label: generateAnnouncementsLabel(
+                                  Team.contra, round),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [Text("Re"), Text("Contra")],
+                            ),
+                            Text("Fuchs"),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 23.63),
+                              child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      width: customCheckboxWidth,
+                                      height: customCheckboxHeight,
+                                      child: CustomCheckbox(
+                                        onTap: () {
+                                          switch (extraPointsToCheckBoxValue(
+                                              round,
+                                              ExtraPoint.fuchs,
+                                              Team.re,
+                                              0)) {
+                                            case 0:
+                                              {
+                                                round.extraPointsRe
+                                                    .add(ExtraPoint.fuchs);
+                                              }
+                                              break;
+                                            case 1:
+                                              {
+                                                round.extraPointsRe
+                                                    .add(ExtraPoint.fuchsAmEnd);
+                                              }
+                                              break;
+                                            case 2:
+                                              {
+                                                round.extraPointsRe
+                                                    .remove(ExtraPoint.fuchs);
+                                                round.extraPointsRe.remove(
+                                                    ExtraPoint.fuchsAmEnd);
+                                              }
+                                              break;
+                                          }
+                                          setStateDialog(() {});
+                                        },
+                                        value: extraPointsToCheckBoxValue(round,
+                                            ExtraPoint.fuchs, Team.re, 0),
+                                        imagePaths: widget.fuchsImagePaths,
+                                      ),
+                                    ),
+                                    Container(
+                                      width: customCheckboxWidth,
+                                      height: customCheckboxHeight,
+                                      child: CustomCheckbox(
+                                        onTap: () {
+                                          switch (extraPointsToCheckBoxValue(
+                                              round,
+                                              ExtraPoint.fuchs,
+                                              Team.contra,
+                                              0)) {
+                                            case 0:
+                                              {
+                                                round.extraPointsContra
+                                                    .add(ExtraPoint.fuchs);
+                                              }
+                                              break;
+                                            case 1:
+                                              {
+                                                round.extraPointsContra
+                                                    .add(ExtraPoint.fuchsAmEnd);
+                                              }
+                                              break;
+                                            case 2:
+                                              {
+                                                round.extraPointsContra
+                                                    .remove(ExtraPoint.fuchs);
+                                                round.extraPointsContra.remove(
+                                                    ExtraPoint.fuchsAmEnd);
+                                              }
+                                              break;
+                                          }
+                                          setStateDialog(() {});
+                                        },
+                                        value: extraPointsToCheckBoxValue(round,
+                                            ExtraPoint.fuchs, Team.contra, 0),
+                                        imagePaths: widget.fuchsImagePaths,
+                                      ),
+                                    ),
+                                  ]),
+                            ),
+                            Text("Doppelkopf"),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 23.63),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    width: customCheckboxWidth,
+                                    height: customCheckboxHeight,
+                                    child: CustomCheckbox(
+                                      onTap: () {
+                                        switch (extraPointsToCheckBoxValue(
+                                            round,
+                                            ExtraPoint.doppelkopf,
+                                            Team.re,
+                                            0)) {
+                                          case 0:
+                                            {
+                                              round.extraPointsRe
+                                                  .add(ExtraPoint.doppelkopf);
+                                            }
+                                            break;
+                                          case 1:
+                                            {
+                                              round.extraPointsRe.remove(
+                                                  ExtraPoint.doppelkopf);
+                                            }
+                                            break;
+                                        }
+                                        setStateDialog(() {});
+                                      },
+                                      value: extraPointsToCheckBoxValue(round,
+                                          ExtraPoint.doppelkopf, Team.re, 0),
+                                      imagePaths: widget.doppelkopfImagePaths,
+                                    ),
+                                  ),
+                                  Container(
+                                    width: customCheckboxWidth,
+                                    height: customCheckboxHeight,
+                                    child: CustomCheckbox(
+                                      onTap: () {
+                                        switch (extraPointsToCheckBoxValue(
+                                            round,
+                                            ExtraPoint.doppelkopf,
+                                            Team.contra,
+                                            0)) {
+                                          case 0:
+                                            {
+                                              round.extraPointsContra
+                                                  .add(ExtraPoint.doppelkopf);
+                                            }
+                                            break;
+                                          case 1:
+                                            {
+                                              round.extraPointsContra.remove(
+                                                  ExtraPoint.doppelkopf);
+                                            }
+                                            break;
+                                        }
+                                        setStateDialog(() {});
+                                      },
+                                      value: extraPointsToCheckBoxValue(
+                                          round,
+                                          ExtraPoint.doppelkopf,
+                                          Team.contra,
+                                          0),
+                                      imagePaths: widget.doppelkopfImagePaths,
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                            Text("Charlie am End"),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 23.63),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    width: customCheckboxWidth,
+                                    height: customCheckboxHeight,
+                                    child: CustomCheckbox(
+                                      onTap: () {
+                                        switch (extraPointsToCheckBoxValue(
+                                            round,
+                                            ExtraPoint.charlie,
+                                            Team.re,
+                                            0)) {
+                                          case 0:
+                                            {
+                                              round.extraPointsRe
+                                                  .add(ExtraPoint.charlie);
+                                            }
+                                            break;
+                                          case 1:
+                                            {
+                                              round.extraPointsRe
+                                                  .remove(ExtraPoint.charlie);
+                                            }
+                                            break;
+                                        }
+                                        setStateDialog(() {});
+                                      },
+                                      value: extraPointsToCheckBoxValue(round,
+                                          ExtraPoint.charlie, Team.re, 0),
+                                      imagePaths: widget.charlieImagePaths,
+                                    ),
+                                  ),
+                                  Container(
+                                    width: customCheckboxWidth,
+                                    height: customCheckboxHeight,
+                                    child: CustomCheckbox(
+                                      onTap: () {
+                                        switch (extraPointsToCheckBoxValue(
+                                            round,
+                                            ExtraPoint.charlie,
+                                            Team.contra,
+                                            0)) {
+                                          case 0:
+                                            {
+                                              round.extraPointsContra
+                                                  .add(ExtraPoint.charlie);
+                                            }
+                                            break;
+                                          case 1:
+                                            {
+                                              round.extraPointsContra
+                                                  .remove(ExtraPoint.charlie);
+                                            }
+                                            break;
+                                        }
+                                        setStateDialog(() {});
+                                      },
+                                      value: extraPointsToCheckBoxValue(round,
+                                          ExtraPoint.charlie, Team.contra, 0),
+                                      imagePaths: widget.charlieImagePaths,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ]),
+                          Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text("Who won?"),
+                                Row(
+                                  children: [
+                                    Container(
+                                      height: 50,
+                                      width: 100,
+                                      child: CheckboxListTile(
+                                        value: round.winningTeam == Team.re
+                                            ? true
+                                            : false,
+                                        title: Text("Re"),
+                                        onChanged: (newValue) {
+                                          setStateDialog(() {
+                                            if (newValue) {
+                                              round.winningTeam = Team.re;
+                                              while (winners.length > 2) {
+                                                winners.removeLast();
+                                              }
+                                            } else {
+                                              round.winningTeam = null;
+                                            }
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    Container(
+                                      height: 50,
+                                      width: 100,
+                                      child: CheckboxListTile(
+                                        value: round.winningTeam == Team.contra
+                                            ? true
+                                            : false,
+                                        title: Text("Contra"),
+                                        onChanged: (newValue) {
+                                          setStateDialog(() {
+                                            if (newValue) {
+                                              round.winningTeam = Team.contra;
+                                            } else {
+                                              round.winningTeam = null;
+                                            }
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    Container(
+                                        height: 50,
+                                        width: 100,
+                                        child: CheckboxListTile(
+                                            value:
+                                                round.winningTeam == Team.draw
+                                                    ? true
+                                                    : false,
+                                            title: Text("Draw"),
+                                            onChanged: (newValue) {
+                                              setStateDialog(() {
+                                                if (newValue) {
+                                                  round.winningTeam = Team.draw;
+                                                  winners =
+                                                      []; //bei einem Unentschieden gibt es keine Sieger
+                                                } else {
+                                                  round.winningTeam = null;
+                                                }
+                                              });
+                                            }))
+                                  ],
+                                ),
+                                Divider(),
+                                ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: widget.game.players.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      return ListTile(
+                                        onTap: () {
+                                            if (winners.length > 0) {
+                                              //für den Fall, dass winners leer ist.
+                                              if (winners.contains(widget
+                                                  .game.players.keys
+                                                  .elementAt(index))) {
+                                                winners.remove(widget
+                                                    .game.players.keys
+                                                    .elementAt(index));
+                                              } else{
+                                           if (round.winningTeam == Team.draw ||
+                                              (round.winningTeam == Team.re &&
+                                                  winners.length >= 2) ||
+                                              winners.length ==
+                                                  (widget.playersPerRound -
+                                                      1)) {
+                                            //TODO: Invalid input feedback;
+
+                                          }   
+                                              else {
+                                                winners.add(widget
+                                                    .game.players.keys
+                                                    .elementAt(index));
+                                              }
+                                            }
+                                          } else {
+                                              winners.add(widget
+                                                  .game.players.keys
+                                                  .elementAt(index));
+                                            }
+                                          setStateDialog(() {});
+                                          },
+
+                                        title: Card(
+                                            color: getPlayerCardColor(
+                                                round,
+                                                widget.game.players.keys
+                                                    .elementAt(index),
+                                                winners,
+                                                widget.playersPerRound),
+                                            elevation: 5.0,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        25.0)),
+                                            child: Align(
+                                                alignment: Alignment.center,
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(
+                                                      15.0),
+                                                  child: Text(widget
+                                                      .game.players.keys
+                                                      .elementAt(index)
+                                                      .name),
+                                                ))),
+                                      );
+                                    })
+                              ]),
+                        ],
                       ),
-                      Container(
-                        width: customCheckboxWidth,
-                        height: customCheckboxHeight,
-                        child: CustomCheckbox(
-                          onTap: () {
-                            switch (extraPointsToCheckBoxValue(
-                                round, ExtraPoint.doppelkopf, Team.contra, 0)) {
-                              case 0:
-                                {
-                                  round.extraPointsContra
-                                      .add(ExtraPoint.doppelkopf);
-                                }
-                                break;
-                              case 1:
-                                {
-                                  round.extraPointsContra
-                                      .remove(ExtraPoint.doppelkopf);
-                                }
-                                break;
-                            }
-                            setStateDialog(() {});
-                          },
-                          value: extraPointsToCheckBoxValue(
-                              round, ExtraPoint.doppelkopf, Team.contra, 0),
-                          imagePaths: widget.doppelkopfImagePaths,
-                        ),
-                      )
-                    ],
-                  ),
+                    ),
+                    CirclePageIndicator(
+                      currentPageNotifier: currentPageNotifier,
+                      itemCount: 2,
+                    )
+                  ],
                 ),
-                Text("Charlie am End"),
-                Padding(
-                  padding: const EdgeInsets.only(left: 23.63),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: customCheckboxWidth,
-                        height: customCheckboxHeight,
-                        child: CustomCheckbox(
-                          onTap: () {
-                            switch (extraPointsToCheckBoxValue(
-                                round, ExtraPoint.charlie, Team.re, 0)) {
-                              case 0:
-                                {
-                                  round.extraPointsRe.add(ExtraPoint.charlie);
-                                }
-                                break;
-                              case 1:
-                                {
-                                  round.extraPointsRe.remove(ExtraPoint.charlie);
-                                }
-                                break;
-                            }
-                            setStateDialog(() {});
-                          },
-                          value: extraPointsToCheckBoxValue(
-                              round, ExtraPoint.charlie, Team.re, 0),
-                          imagePaths: widget.charlieImagePaths,
-                        ),
-                      ),
-                      Container(
-                        width: customCheckboxWidth,
-                        height: customCheckboxHeight,
-                        child: CustomCheckbox(
-                          onTap: () {
-                            switch (extraPointsToCheckBoxValue(
-                                round, ExtraPoint.charlie, Team.contra, 0)) {
-                              case 0:
-                                {
-                                  round.extraPointsContra.add(ExtraPoint.charlie);
-                                }
-                                break;
-                              case 1:
-                                {
-                                  round.extraPointsContra
-                                      .remove(ExtraPoint.charlie);
-                                }
-                                break;
-                            }
-                            setStateDialog(() {});
-                          },
-                          value: extraPointsToCheckBoxValue(
-                              round, ExtraPoint.charlie, Team.contra, 0),
-                          imagePaths: widget.charlieImagePaths,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ]),
+              ),
               actions: [
                 ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      Navigator.of(context).pop(round);
                     },
                     child: Text("Submit")),
                 ElevatedButton(
@@ -505,6 +662,46 @@ class _GameOverviewState extends State<GameOverview> {
       }
     } else {
       return 0; // die zu überprüfende Checkbox soll inaktiv dargestellt werden
+    }
+  }
+}
+
+Color getPlayerCardColor(
+    Round round, Player player, List<Player> winners, int playersPerRound) {
+  if (winners.contains(player)) {
+    return Colors.lightGreenAccent; //Sieger werden grün hinterlegt
+  } else {
+    switch (round.winningTeam) {
+      case Team.re:
+        {
+          if (winners.length > 1) {
+            return Colors
+                .redAccent; //wenn per Aussschlussverfahren klar ist, wer die Verlierer sind, werden diese Rot angezeigt
+          } else {
+            return Colors
+                .grey; //solange unklar ist, wer verloren hat, werden alle außer die Sieger grau angezeigt
+          }
+        }
+        break;
+
+      case Team.contra:
+        {
+          if (winners.length > (playersPerRound - 3)) {
+            return Colors.redAccent; //wieder Ausschlussverfahren
+          } else {
+            return Colors.grey;
+          }
+        }
+        break;
+      case Team.draw:
+        {
+          return Colors.grey;
+        }
+        break;
+      default:
+        {
+          return Colors.grey; //Wenn noch nichts ausgewählt wurde
+        }
     }
   }
 }

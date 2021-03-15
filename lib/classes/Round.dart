@@ -9,6 +9,7 @@ class Round {
   List<Player> playersContra;
   List<Player> playersRe;
   List<Player> spectators;
+  List<Player> winners = [];
 
   Player dealer;
   Team winningTeam;
@@ -61,7 +62,6 @@ class Round {
           extraPoint == ExtraPoint.fuchsAmEnd ? roundValue -= 2 : roundValue--);
       extraPointsWinningTeam.map((extraPoint) =>
           extraPoint == ExtraPoint.fuchsAmEnd ? roundValue += 2 : roundValue++);
-
 
       return roundValue;
     }
