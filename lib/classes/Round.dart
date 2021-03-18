@@ -55,10 +55,12 @@ class Round {
       }
       roundValue = 1; //ein Punkt fürs gewinnen gibts immer
 
-      roundValue += (winningTeamPoints - announcementsLoosingTeam) % 30;
+      roundValue += (winningTeamPoints - 120) ~/ 30;
 
       roundValue += ((announcementsWinningTeam - 120).abs().toInt()) ~/
           30; //Ansagen werden immer dem Gewinner zugerechnet, egal von wem Sie kommen
+      roundValue += ((announcementsLoosingTeam - 120).abs().toInt()) ~/
+          30;
 
       roundValue += gesprochenRe;
       roundValue += gesprochenContra;

@@ -69,34 +69,47 @@ class _GameOverviewState extends State<GameOverview> {
                           height: 80,
                           decoration: BoxDecoration(color: Colors.blueGrey),
                           child: ListTile(
-                              contentPadding: EdgeInsets.fromLTRB(10, 13, 10, 22),
+                              contentPadding:
+                                  EdgeInsets.fromLTRB(10, 13, 10, 22),
                               title: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch ,
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: widget.game.getRounds()[index].getPlayerIncomes().values.map((income) =>   
-                                Expanded(
-                                  child: IntrinsicHeight(
-                                  
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                                      children: [
-                                        Container(
-                                          width: 45,
-                                          decoration: BoxDecoration(
-                                            border: Border.all(),
-                                          color: income < 0 ? Colors.redAccent : Colors.lightGreen,
-                                            borderRadius: BorderRadius.circular(7.0),
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: widget.game
+                                    .getRounds()[index]
+                                    .getPlayerIncomes()
+                                    .values
+                                    .map((income) => Expanded(
+                                          child: IntrinsicHeight(
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceEvenly,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                Container(
+                                                    width: 45,
+                                                    decoration: BoxDecoration(
+                                                      border: Border.all(),
+                                                      color: income < 0
+                                                          ? Colors.redAccent
+                                                          : Colors.lightGreen,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              7.0),
+                                                    ),
+                                                    child: Center(
+                                                        child: Text(income
+                                                            .toString()))),
+                                                VerticalDivider(
+                                                  color: Colors.grey[900],
+                                                  thickness: 1.5,
+                                                )
+                                              ],
+                                            ),
                                           ),
-                                          child: Center(child: Text(income.toString()))),
-                                        VerticalDivider(
-                                          color: Colors.grey[900],
-                                          thickness: 1.5,
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                )).toList(),
+                                        ))
+                                    .toList(),
                               )),
                         ),
                       );
@@ -745,7 +758,9 @@ class _GameOverviewState extends State<GameOverview> {
 
   bool isRoundInputValid(Round round, int playersPerRound) {
     if (round.winningTeam == null ||
-        (round.gesprochenContra == 0 && round.gesprochenRe == 0)) {
+        (round.gesprochenContra == 0 &&
+            round.gesprochenRe == 0 &&
+            round.winningTeam != Team.draw)) {
       return false;
     } else {
       if (round.winningTeam == Team.re) {
@@ -758,7 +773,15 @@ class _GameOverviewState extends State<GameOverview> {
         }
       }
     }
-    return true;
+    if ((240 - round.announcementsContra) > round.winningTeamPoints &&
+        round.winningTeam != Team.contra) {
+      return false;
+    } else if ((240 - round.announcementsRe) > round.winningTeamPoints &&
+        round.winningTeam == Team.re) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   Color getPlayerCardColor(Round round, int index, int playersPerRound) {
