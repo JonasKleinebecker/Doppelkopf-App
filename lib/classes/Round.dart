@@ -6,8 +6,9 @@ import 'package:doppelkopf/pages/startGame.dart';
 import 'Player.dart';
 
 class Round {
-  //List<Player> playersContra;
-  //List<Player> playersRe;
+  Round(this.players);
+
+  List<Player> players;
   List<Player> spectators;
   List<Player> winners = [];
 
@@ -27,8 +28,7 @@ class Round {
 
   int roundValue;
 
-  int calculateRoundValue() {
-    int roundValue = 0;
+  void calculateRoundValue() {
     int announcementsWinningTeam;
     int announcementsLoosingTeam;
     List<ExtraPoint> extraPointsWinningTeam;
@@ -50,7 +50,8 @@ class Round {
     //Startpunkt für die extraPunkte Berechnung durch Punkte bestimmen
     if (soloPlayed == Solo.none) {
       if (winningTeam == Team.draw) {
-        return 0;
+        roundValue = 0;
+        return;
       }
       roundValue = 1; //ein Punkt fürs gewinnen gibts immer
 
@@ -68,9 +69,32 @@ class Round {
       if (bockrunde) {
         roundValue *= 2;
       }
-
-      return roundValue;
     }
+  }
+
+  Map<Player, double> getPlayerIncomes() {
+    Map<Player, double> incomes = Map<Player, double>();
+
+    double winnersShareRatio;
+    double loosersShareRatio;
+
+    if ((players.length / 2) > winners.length) {
+      //weniger Gewinner
+      winnersShareRatio = (players.length - winners.length) / winners.length;
+      loosersShareRatio = 1;
+    } else if ((players.length / 2) < winners.length) {
+      //mehr Gewinner
+      winnersShareRatio = 1;
+      loosersShareRatio = winners.length / (players.length - winners.length);
+    } else {
+      winnersShareRatio = 1;
+      loosersShareRatio = 1;
+    }
+    players.forEach((player) => winners.contains(player)
+        ? incomes.putIfAbsent(player, () =>(roundValue * winnersShareRatio))
+        : incomes.putIfAbsent(player, () => (-(roundValue * loosersShareRatio))));
+
+    return incomes;
   }
 }
 

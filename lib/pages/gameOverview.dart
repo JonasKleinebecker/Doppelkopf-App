@@ -2,10 +2,7 @@ import 'package:doppelkopf/classes/Game.dart';
 import 'package:doppelkopf/classes/Player.dart';
 import 'package:doppelkopf/classes/Round.dart';
 import 'package:doppelkopf/customWidgets/CustomCheckbox.dart';
-import 'package:doppelkopf/pages/players.dart';
 import 'package:flutter/material.dart';
-import 'package:doppelkopf/pages/home.dart';
-import 'package:doppelkopf/pages/startGame.dart';
 import 'package:page_view_indicators/page_view_indicators.dart';
 
 class GameOverview extends StatefulWidget {
@@ -44,19 +41,88 @@ class _GameOverviewState extends State<GameOverview> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView.builder(
-          itemCount: widget.game.getRounds().length,
-          itemBuilder: (BuildContext context, int index) {
-            return ListTile(
-                title: Text(
-                    "${widget.game.getRounds()[index].extraPointsRe.length}"));
-          }),
+      appBar: AppBar(
+        title: Text("GameOverview"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 10.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Flexible(
+                flex: 1,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: generateHeadingWidgetList(),
+                )),
+            Flexible(
+              flex: 6,
+              child: Center(
+                child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: widget.game.getRounds().length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Card(
+                        elevation: 8.0,
+                        margin: EdgeInsets.fromLTRB(10, 6, 110, 6),
+                        child: Container(
+                          height: 80,
+                          decoration: BoxDecoration(color: Colors.blueGrey),
+                          child: ListTile(
+                              contentPadding: EdgeInsets.fromLTRB(10, 13, 10, 22),
+                              title: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch ,
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: widget.game.getRounds()[index].getPlayerIncomes().values.map((income) =>   
+                                Expanded(
+                                  child: IntrinsicHeight(
+                                  
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        Container(
+                                          width: 45,
+                                          decoration: BoxDecoration(
+                                            border: Border.all(),
+                                          color: income < 0 ? Colors.redAccent : Colors.lightGreen,
+                                            borderRadius: BorderRadius.circular(7.0),
+                                          ),
+                                          child: Center(child: Text(income.toString()))),
+                                        VerticalDivider(
+                                          color: Colors.grey[900],
+                                          thickness: 1.5,
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                )).toList(),
+                              )),
+                        ),
+                      );
+                    }),
+              ),
+            ),
+            Flexible(
+                flex: 1,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 100.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: widget.game.players.values
+                        .map((score) => Text(score.toString()))
+                        .toList(),
+                  ),
+                ))
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () async {
           await createAddRoundDialog().then((onValue) {
             if (onValue != null) {
-              widget.game.getRounds().add(onValue);
+              widget.game.intregrateRound(onValue);
             }
           });
           setState(() {});
@@ -66,7 +132,7 @@ class _GameOverviewState extends State<GameOverview> {
   }
 
   Future<Round> createAddRoundDialog() {
-    Round round = Round();
+    Round round = Round(widget.game.players.keys.toList());
     final PageController pageViewController = PageController(initialPage: 0);
     final ValueNotifier<int> currentPageNotifier = ValueNotifier<int>(0);
 
@@ -512,18 +578,17 @@ class _GameOverviewState extends State<GameOverview> {
                                 Divider(),
                                 ListView.builder(
                                     shrinkWrap: true,
-                                    itemCount: widget.game.players.length,
+                                    itemCount: round.players.length,
                                     itemBuilder:
                                         (BuildContext context, int index) {
                                       return ListTile(
                                         onTap: () {
                                           if (round.winners.length > 0) {
                                             //für den Fall, dass winners leer ist.
-                                            if (round.winners.contains(widget
-                                                .game.players.keys
+                                            if (round.winners.contains(round
+                                                .players
                                                 .elementAt(index))) {
-                                              round.winners.remove(widget
-                                                  .game.players.keys
+                                              round.winners.remove(round.players
                                                   .elementAt(index));
                                             } else {
                                               if (round.winningTeam ==
@@ -539,24 +604,19 @@ class _GameOverviewState extends State<GameOverview> {
 
                                               } else if (round.winningTeam !=
                                                   Team.draw) {
-                                                round.winners.add(widget
-                                                    .game.players.keys
+                                                round.winners.add(round.players
                                                     .elementAt(index));
                                               }
                                             }
                                           } else {
-                                            round.winners.add(widget
-                                                .game.players.keys
-                                                .elementAt(index));
+                                            round.winners.add(
+                                                round.players.elementAt(index));
                                           }
                                           setStateDialog(() {});
                                         },
                                         title: Card(
-                                            color: getPlayerCardColor(
-                                                round,
-                                                widget.game.players.keys
-                                                    .elementAt(index),
-                                                widget.playersPerRound),
+                                            color: getPlayerCardColor(round,
+                                                index, widget.playersPerRound),
                                             elevation: 5.0,
                                             shape: RoundedRectangleBorder(
                                                 borderRadius:
@@ -567,8 +627,7 @@ class _GameOverviewState extends State<GameOverview> {
                                                 child: Padding(
                                                   padding: const EdgeInsets.all(
                                                       15.0),
-                                                  child: Text(widget
-                                                      .game.players.keys
+                                                  child: Text(round.players
                                                       .elementAt(index)
                                                       .name),
                                                 ))),
@@ -588,7 +647,7 @@ class _GameOverviewState extends State<GameOverview> {
                                   divisions: 8,
                                 ),
                                 isRoundInputValid(round, widget.playersPerRound)
-                                    ? Text("${round.calculateRoundValue()}")
+                                    ? updateAndDisplayRoundValue(round)
                                     : Text("-"),
                               ]),
                         ],
@@ -604,7 +663,7 @@ class _GameOverviewState extends State<GameOverview> {
               actions: [
                 ElevatedButton(
                     onPressed: isRoundInputValid(round, widget.playersPerRound)
-                        ? () => submitRound()
+                        ? () => submitRound(round)
                         : null,
                     child: Text("Submit")),
                 ElevatedButton(
@@ -680,12 +739,13 @@ class _GameOverviewState extends State<GameOverview> {
     }
   }
 
-  void submitRound() {
-    Navigator.of(context).pop(null);
+  void submitRound(Round round) {
+    Navigator.of(context).pop(round);
   }
 
   bool isRoundInputValid(Round round, int playersPerRound) {
-    if (round.winningTeam == null || (round.gesprochenContra == 0 && round.gesprochenRe == 0)) {
+    if (round.winningTeam == null ||
+        (round.gesprochenContra == 0 && round.gesprochenRe == 0)) {
       return false;
     } else {
       if (round.winningTeam == Team.re) {
@@ -701,7 +761,9 @@ class _GameOverviewState extends State<GameOverview> {
     return true;
   }
 
-  Color getPlayerCardColor(Round round, Player player, int playersPerRound) {
+  Color getPlayerCardColor(Round round, int index, int playersPerRound) {
+    Player player = round.players.elementAt(index);
+
     if (round.winners.contains(player)) {
       return Colors.lightGreenAccent; //Sieger werden grün hinterlegt
     } else {
@@ -738,5 +800,27 @@ class _GameOverviewState extends State<GameOverview> {
           }
       }
     }
+  }
+
+  Widget updateAndDisplayRoundValue(Round round) {
+    round.calculateRoundValue();
+
+    return Text("${round.roundValue}");
+  }
+
+  List<Widget> generateHeadingWidgetList() {
+    List<Widget> headers = List.empty(growable: true);
+
+    headers = widget.game.players.keys
+        .map((player) => Text(
+              player.name,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ))
+        .toList();
+    headers.add(Text(
+      "Rundenwert",
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    ));
+    return headers;
   }
 }
