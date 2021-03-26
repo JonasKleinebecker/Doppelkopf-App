@@ -14,7 +14,7 @@ class PlayerController {
   static set setPlayerList(List playerList) =>
       PlayerController.playerList = playerList;
 
-  static Future<void> setPlayersFromSharedPreferences() async {
+  static Future<void> loadPlayers() async {
     isLoaded = true;
 
     final prefs = await SharedPreferences.getInstance();
@@ -26,7 +26,7 @@ class PlayerController {
     }
   }
 
-  static void savePlayersToSharedPreferences() async {
+  static void savePlayers() async {
     final prefs = await SharedPreferences.getInstance();
     List<Map<String, dynamic>> playerStrings =
         playerList.map((player) => player.toJson()).toList();
@@ -39,6 +39,6 @@ class PlayerController {
         playerList.removeAt(i);
       }
     }
-    savePlayersToSharedPreferences();
+    savePlayers();
   }
 }
