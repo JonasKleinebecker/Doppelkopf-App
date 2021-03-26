@@ -6,38 +6,34 @@ import 'package:flutter/material.dart';
 import 'package:page_view_indicators/page_view_indicators.dart';
 
 class GameOverview extends StatefulWidget {
-  Game game;
-  int playersPerRound;
+  final Game copyGame;
 
-  List<String> fuchsImagePaths = [
+  final List<String> fuchsImagePaths = [
     "assets/images/Ace_Of_Diamonds_greyed_out.svg",
     "assets/images/Ace_Of_Diamonds.svg",
     "assets/images/Ace_Of_Diamonds_plus_plus.svg"
   ];
 
-  List<String> charlieImagePaths = [
+  final List<String> charlieImagePaths = [
     "assets/images/Jack_Of_Clubs_greyed_out.svg",
     "assets/images/Jack_Of_Clubs.svg"
   ];
 
-  List<String> doppelkopfImagePaths = [
+  final List<String> doppelkopfImagePaths = [
     "assets/images/4erDoppelkopf_greyed_out.svg",
     "assets/images/4erDoppelkopf.svg"
   ];
-  GameOverview(List<Player> activePlayers) {
-    game = new Game(activePlayers);
-    if (activePlayers.length > 5) {
-      playersPerRound = 5;
-    } else {
-      playersPerRound = activePlayers.length;
-    }
-  }
+  GameOverview(this.copyGame);
 
   @override
-  _GameOverviewState createState() => _GameOverviewState();
+  _GameOverviewState createState() => _GameOverviewState(copyGame);
 }
 
 class _GameOverviewState extends State<GameOverview> {
+  Game game;
+
+  _GameOverviewState(this.game);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,62 +53,13 @@ class _GameOverviewState extends State<GameOverview> {
                 )),
             Flexible(
               flex: 6,
-              child: Center(
+              child: Align(
+                alignment: Alignment.topCenter,
                 child: ListView.builder(
                     shrinkWrap: true,
-                    itemCount: widget.game.getRounds().length,
+                    itemCount: game.getRounds().length,
                     itemBuilder: (BuildContext context, int index) {
-                      return Card(
-                        elevation: 8.0,
-                        margin: EdgeInsets.fromLTRB(10, 6, 110, 6),
-                        child: Container(
-                          height: 80,
-                          decoration: BoxDecoration(color: Colors.blueGrey),
-                          child: ListTile(
-                              contentPadding:
-                                  EdgeInsets.fromLTRB(10, 13, 10, 22),
-                              title: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: widget.game
-                                    .getRounds()[index]
-                                    .getPlayerIncomes()
-                                    .values
-                                    .map((income) => Expanded(
-                                          child: IntrinsicHeight(
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceEvenly,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.stretch,
-                                              children: [
-                                                Container(
-                                                    width: 45,
-                                                    decoration: BoxDecoration(
-                                                      border: Border.all(),
-                                                      color: income < 0
-                                                          ? Colors.redAccent
-                                                          : Colors.lightGreen,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              7.0),
-                                                    ),
-                                                    child: Center(
-                                                        child: Text(income
-                                                            .toString()))),
-                                                VerticalDivider(
-                                                  color: Colors.grey[900],
-                                                  thickness: 1.5,
-                                                )
-                                              ],
-                                            ),
-                                          ),
-                                        ))
-                                    .toList(),
-                              )),
-                        ),
-                      );
+                      return generateRoundCard(index);
                     }),
               ),
             ),
@@ -122,7 +69,7 @@ class _GameOverviewState extends State<GameOverview> {
                   padding: const EdgeInsets.only(right: 100.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: widget.game.players.values
+                    children: game.playerScores.values
                         .map((score) => Text(score.toString()))
                         .toList(),
                   ),
@@ -133,9 +80,9 @@ class _GameOverviewState extends State<GameOverview> {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () async {
-          await createAddRoundDialog().then((onValue) {
+          await createAddRoundDialog(null).then((onValue) {
             if (onValue != null) {
-              widget.game.intregrateRound(onValue);
+              game.intregrateRound(onValue);
             }
           });
           setState(() {});
@@ -144,8 +91,73 @@ class _GameOverviewState extends State<GameOverview> {
     );
   }
 
-  Future<Round> createAddRoundDialog() {
-    Round round = Round(widget.game.players.keys.toList());
+  Card generateRoundCard(int index) {
+    Round round = game.getRounds()[index];
+    List<Widget> widgets = round
+        .getPlayerIncomes()
+        .values
+        .map((income) => Expanded(
+              child: IntrinsicHeight(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                        width: 45,
+                        decoration: BoxDecoration(
+                          border: Border.all(),
+                          color:
+                              income < 0 ? Colors.redAccent : Colors.lightGreen,
+                          borderRadius: BorderRadius.circular(7.0),
+                        ),
+                        child: Center(child: Text(income.toString()))),
+                    VerticalDivider(
+                      color: Colors.grey[900],
+                      thickness: 1.5,
+                    )
+                  ],
+                ),
+              ),
+            ))
+        .toList();
+
+    widgets
+        .add(Expanded(child: Center(child: Text(round.roundValue.toString()))));
+
+    return Card(
+      elevation: 8.0,
+      margin: EdgeInsets.fromLTRB(10, 6, 10, 6),
+      child: Container(
+        height: 80,
+        decoration: BoxDecoration(color: Colors.blueGrey),
+        child: ListTile(
+            contentPadding: EdgeInsets.fromLTRB(10, 13, 10, 22),
+            onTap: () async {
+              await createAddRoundDialog(round);
+              setState(() {});
+            },
+            title: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: widgets,
+            )),
+      ),
+    );
+  }
+
+  Future<Round> createAddRoundDialog(Round round) {
+    String dialogTitle;
+    int roundNumber;
+
+    if (round == null) {
+      roundNumber = game.getRounds().length + 1;
+      round = Round(game.players.toList());
+      dialogTitle = "Create Round Nr. $roundNumber";
+    } else {
+      roundNumber = game.getRounds().indexOf(round) + 1;
+      dialogTitle = "Change Round Nr. $roundNumber";
+    }
+
     final PageController pageViewController = PageController(initialPage: 0);
     final ValueNotifier<int> currentPageNotifier = ValueNotifier<int>(0);
 
@@ -157,7 +169,7 @@ class _GameOverviewState extends State<GameOverview> {
             final double customCheckboxHeight = 85;
 
             return AlertDialog(
-              title: Text("Enter the new Round"),
+              title: Text(dialogTitle),
               content: Container(
                 width: 1000000,
                 height: 1000000,
@@ -611,7 +623,7 @@ class _GameOverviewState extends State<GameOverview> {
                                                       round.winners.length >=
                                                           2) ||
                                                   round.winners.length ==
-                                                      (widget.playersPerRound -
+                                                      (game.playersPerRound -
                                                           1)) {
                                                 //TODO: Invalid input feedback;
 
@@ -629,7 +641,7 @@ class _GameOverviewState extends State<GameOverview> {
                                         },
                                         title: Card(
                                             color: getPlayerCardColor(round,
-                                                index, widget.playersPerRound),
+                                                index, game.playersPerRound),
                                             elevation: 5.0,
                                             shape: RoundedRectangleBorder(
                                                 borderRadius:
@@ -659,7 +671,7 @@ class _GameOverviewState extends State<GameOverview> {
                                   max: 8.0,
                                   divisions: 8,
                                 ),
-                                isRoundInputValid(round, widget.playersPerRound)
+                                isRoundInputValid(round, game.playersPerRound)
                                     ? updateAndDisplayRoundValue(round)
                                     : Text("-"),
                               ]),
@@ -675,7 +687,7 @@ class _GameOverviewState extends State<GameOverview> {
               ),
               actions: [
                 ElevatedButton(
-                    onPressed: isRoundInputValid(round, widget.playersPerRound)
+                    onPressed: isRoundInputValid(round, game.playersPerRound)
                         ? () => submitRound(round)
                         : null,
                     child: Text("Submit")),
@@ -834,14 +846,14 @@ class _GameOverviewState extends State<GameOverview> {
   List<Widget> generateHeadingWidgetList() {
     List<Widget> headers = List.empty(growable: true);
 
-    headers = widget.game.players.keys
+    headers = game.players
         .map((player) => Text(
               player.name,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ))
         .toList();
     headers.add(Text(
-      "Rundenwert",
+      "Runde",
       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     ));
     return headers;
