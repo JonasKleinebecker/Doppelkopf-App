@@ -58,11 +58,6 @@ class _PlayersState extends State<Players> {
         });
   }
 
-  void initState() {
-    super.initState();
-    loadPlayerList();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,7 +85,7 @@ class _PlayersState extends State<Players> {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (BuildContext context) {
                   return playerDetail(
-                      PlayerController.getPlayerList[index]); //TODO: Refactor
+                      PlayerController.getPlayerList[index]); 
                 }));
                 setState(() {}); //Reload if Back Button is pressed
               });
@@ -102,8 +97,9 @@ class _PlayersState extends State<Players> {
           createAddPlayerDialog(context).then((onValue) {
             setState(() {
               if (onValue != null) {
+                onValue.id = getFreePlayerID();
                 PlayerController.getPlayerList.add(onValue);
-                PlayerController.savePlayersToSharedPreferences();
+                PlayerController.savePlayers();
               }
             });
           });
@@ -112,10 +108,21 @@ class _PlayersState extends State<Players> {
     );
   }
 
-  void loadPlayerList() async {
-    await PlayerController.setPlayersFromSharedPreferences(); //TODO: Refactor!
-    setState(() {
-      //!hässlich
-    });
+  int getFreePlayerID() {
+    List<Player> players = PlayerController.getPlayerList;
+    int id = 0;
+
+    if (players.length != 0) {
+      for (Player player in players) {
+        if (player.id > id) {
+          id = player.id;
+        }
+      }
+    } else {
+      id = 0;
+    }
+    id++;
+
+    return id;
   }
 }
