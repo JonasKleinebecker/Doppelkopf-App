@@ -1,3 +1,5 @@
+import 'package:doppelkopf/classes/Game.dart';
+import 'package:doppelkopf/classes/GameController.dart';
 import 'package:doppelkopf/classes/Player.dart';
 import 'package:doppelkopf/classes/PlayerController.dart';
 import 'package:flutter/material.dart';
@@ -5,18 +7,13 @@ import 'package:flutter/material.dart';
 import 'gameOverview.dart';
 
 class StartGame extends StatefulWidget {
-  List<Player> activePlayers = [];
 
   @override
   _StartGameState createState() => _StartGameState();
 }
 
 class _StartGameState extends State<StartGame> {
-  @override
-  void initState() {
-    super.initState();
-    loadPlayerList();
-  }
+  List<Player> activePlayers = [];
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,21 +30,21 @@ class _StartGameState extends State<StartGame> {
             Expanded(
               child: ListView.separated(
                 separatorBuilder: (context, index) => Divider(),
-                itemCount: widget.activePlayers != null
-                    ? widget.activePlayers.length
+                itemCount: activePlayers != null
+                    ? activePlayers.length
                     : 0,
                 itemBuilder: (BuildContext context, int index) {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.blueGrey[800],
                       child: Text(
-                          widget.activePlayers[index].name.substring(0, 1)),
+                          activePlayers[index].name.substring(0, 1)),
                     ),
-                    title: Text(widget.activePlayers[index].name),
+                    title: Text(activePlayers[index].name),
                     trailing: IconButton(
                         icon: Icon(Icons.delete),
                         onPressed: () {
-                          widget.activePlayers.removeAt(index);
+                          activePlayers.removeAt(index);
                           setState(() {});
                         }),
                   );
@@ -64,7 +61,7 @@ class _StartGameState extends State<StartGame> {
               onPressed: () {
                 createAddPlayersDialog(context).then((onValue) {
                   if (onValue != null) {
-                    widget.activePlayers.add(onValue);
+                    activePlayers.add(onValue);
                     setState(() {});
                   }
                 });
@@ -78,19 +75,12 @@ class _StartGameState extends State<StartGame> {
     );
   }
 
-  void loadPlayerList() async {
-    await PlayerController.setPlayersFromSharedPreferences(); //TODO: Refactor!
-    setState(() {
-      //!hässlich
-    });
-  }
-
   Future<Player> createAddPlayersDialog(BuildContext context) {
     List<Player> addeblePlayers =
         []; // does not contain Players, who have already been added
     addeblePlayers.addAll(PlayerController.getPlayerList);
     addeblePlayers
-        .removeWhere((player) => widget.activePlayers.contains(player));
+        .removeWhere((player) => activePlayers.contains(player));
     return showDialog(
         context: context,
         builder: (context) {
@@ -129,7 +119,7 @@ class _StartGameState extends State<StartGame> {
   }
 
   bool enoughPlayerAdded() {
-    if (widget.activePlayers.length >= 4) {
+    if (activePlayers.length >= 4) {
       return true;
     } else {
       return false;
@@ -137,7 +127,9 @@ class _StartGameState extends State<StartGame> {
   }
 
   void startGame() {
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => GameOverview(widget.activePlayers)));
+    Game game = Game(activePlayers);
+    GameController.addGame(game);
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => GameOverview(game)));
   }
 }
