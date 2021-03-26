@@ -2,9 +2,13 @@ import 'package:doppelkopf/pages/players.dart';
 import 'package:flutter/material.dart';
 import 'package:doppelkopf/pages/home.dart';
 import 'package:doppelkopf/pages/startGame.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 import 'Player.dart';
 
+part 'Round.g.dart';
+
+@JsonSerializable(explicitToJson: true)
 class Round {
   Round(this.players);
 
@@ -59,8 +63,7 @@ class Round {
 
       roundValue += ((announcementsWinningTeam - 120).abs().toInt()) ~/
           30; //Ansagen werden immer dem Gewinner zugerechnet, egal von wem Sie kommen
-      roundValue += ((announcementsLoosingTeam - 120).abs().toInt()) ~/
-          30;
+      roundValue += ((announcementsLoosingTeam - 120).abs().toInt()) ~/ 30;
 
       roundValue += gesprochenRe;
       roundValue += gesprochenContra;
@@ -93,11 +96,16 @@ class Round {
       loosersShareRatio = 1;
     }
     players.forEach((player) => winners.contains(player)
-        ? incomes.putIfAbsent(player, () =>(roundValue * winnersShareRatio))
-        : incomes.putIfAbsent(player, () => (-(roundValue * loosersShareRatio))));
+        ? incomes.putIfAbsent(player, () => (roundValue * winnersShareRatio))
+        : incomes.putIfAbsent(
+            player, () => (-(roundValue * loosersShareRatio))));
 
     return incomes;
   }
+
+  factory Round.fromJson(Map<String, dynamic> data) => _$RoundFromJson(data);
+
+  Map<String, dynamic> toJson() => _$RoundToJson(this);
 }
 
 enum ExtraPoint { fuchs, fuchsAmEnd, charlie, doppelkopf }
